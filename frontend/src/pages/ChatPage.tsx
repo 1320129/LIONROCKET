@@ -115,7 +115,11 @@ export default function ChatPage() {
     const ch = getChannel();
     if (!ch) return;
     const onMessage = (ev: MessageEvent<unknown>) => {
-      const data = ev.data as { type?: string; characterId?: number; value?: unknown };
+      const data = ev.data as {
+        type?: string;
+        characterId?: number;
+        value?: unknown;
+      };
       if (data?.type === "draft" && data.characterId === characterId) {
         const value = (data as { value?: unknown }).value;
         setInput(String(value || ""));
