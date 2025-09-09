@@ -1,6 +1,7 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
 import { apiWithRetry } from "../lib/api";
+import { useDialog } from "../ui/Dialog";
 import { Button, Card, EmptyState, Row, Input } from "../ui/primitives";
 import {
   readDraft,
@@ -21,6 +22,7 @@ type MessageWithStatus = Message & {
 };
 
 export default function ChatPage() {
+  const dialog = useDialog();
   const { id } = useParams();
   const characterId = Number(id);
   const cachedName = (() => {
@@ -44,14 +46,16 @@ export default function ChatPage() {
 
   React.useEffect(() => {
     (async () => {
-      // Fetch name from server only if we don't have a cached one
       if (!cachedName) {
         try {
           const ch = await apiWithRetry<{ id: number; name: string }>(
             `/characters/${characterId}`
           );
           if (ch?.name) setCharacterName(ch.name);
-        } catch {}
+        } catch {
+          // ignore fetch error; fallback name is already set
+          void 0;
+        }
       }
       try {
         const limit = 30;
@@ -66,11 +70,12 @@ export default function ChatPage() {
           const el = listRef.current;
           if (el) el.scrollTop = el.scrollHeight;
         });
-      } catch (e: any) {
-        setError(e.message);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        setError(msg);
       }
     })();
-  }, [characterId]);
+  }, [characterId, cachedName]);
 
   async function loadOlder() {
     if (loadingOlder || !hasMore || messages.length === 0) return;
@@ -88,8 +93,9 @@ export default function ChatPage() {
         const el = listRef.current;
         if (el) el.scrollTop = 1; // nudge to avoid re-trigger at exact 0
       });
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg);
     } finally {
       setLoadingOlder(false);
     }
@@ -108,24 +114,25 @@ export default function ChatPage() {
   React.useEffect(() => {
     const ch = getChannel();
     if (!ch) return;
-    const onMessage = (ev: MessageEvent<any>) => {
-      const data = ev.data as any;
+    const onMessage = (ev: MessageEvent<unknown>) => {
+      const data = ev.data as { type?: string; characterId?: number; value?: unknown };
       if (data?.type === "draft" && data.characterId === characterId) {
-        setInput(String(data.value || ""));
+        const value = (data as { value?: unknown }).value;
+        setInput(String(value || ""));
       }
       if (data?.type === "logout") {
         location.href = "/login";
       }
     };
-    ch.addEventListener("message", onMessage as any);
-    return () => ch.removeEventListener("message", onMessage as any);
+    ch.addEventListener("message", onMessage);
+    return () => ch.removeEventListener("message", onMessage);
   }, [characterId]);
 
   async function onSend(e: React.FormEvent) {
     e.preventDefault();
     if (!input.trim()) return;
     if (input.length > 200) {
-      alert("메시지는 200자 이내로 입력해주세요.");
+      await dialog.alert("메시지는 200자 이내로 입력해주세요.", "안내");
       return;
     }
     setError(null);
@@ -169,14 +176,15 @@ export default function ChatPage() {
         if (el && stickToBottomRef.current) el.scrollTop = el.scrollHeight;
       });
       setError(null);
-    } catch (e: any) {
-      const msg = e?.message || "전송 실패";
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "전송 실패";
       setMessages((prev) =>
         prev.map((m) =>
           m.id === userMsg.id ? { ...m, status: "failed", error: msg } : m
         )
       );
       setError(msg);
+      await dialog.alert(msg, "오류");
     } finally {
       setLoading(false);
     }
@@ -216,8 +224,8 @@ export default function ChatPage() {
         const el = listRef.current;
         if (el && stickToBottomRef.current) el.scrollTop = el.scrollHeight;
       });
-    } catch (e: any) {
-      const msg = e?.message || "전송 실패";
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "전송 실패";
       setMessages((prev) =>
         prev.map((m) =>
           m.id === messageId ? { ...m, status: "failed", error: msg } : m

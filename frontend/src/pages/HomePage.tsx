@@ -11,6 +11,7 @@ import {
   Grid,
   SectionTitle,
 } from "../ui/primitives";
+import { useDialog } from "../ui/Dialog";
 
 type Character = {
   id: number;
@@ -22,6 +23,7 @@ type Character = {
 };
 
 export default function HomePage() {
+  const dialog = useDialog();
   const [me, setMe] = React.useState<{ id: number; email: string } | null>(
     null
   );
@@ -85,7 +87,7 @@ export default function HomePage() {
     });
     if (!res.ok) {
       const t = await res.text();
-      alert(`생성 실패: ${t}`);
+      await dialog.alert(`생성 실패: ${t}`, "오류");
       return;
     }
     const created = (await res.json()) as Character;
@@ -96,13 +98,18 @@ export default function HomePage() {
   }
 
   async function onDeleteCharacter(id: number) {
-    if (!confirm("이 캐릭터를 삭제하시겠습니까? 관련 대화도 함께 삭제됩니다."))
-      return;
+    const ok = await dialog.confirm(
+      "이 캐릭터를 삭제하시겠습니까? 관련 대화도 함께 삭제됩니다.",
+      "삭제 확인",
+      "삭제",
+      "취소"
+    );
+    if (!ok) return;
     try {
       await api(`/characters/${id}`, { method: "DELETE" });
       setCharacters((prev) => prev.filter((c) => c.id !== id));
     } catch (e: any) {
-      alert(e?.message || "삭제 실패");
+      await dialog.alert(e?.message || "삭제 실패", "오류");
     }
   }
 

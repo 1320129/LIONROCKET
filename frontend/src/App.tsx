@@ -4,6 +4,7 @@ import { ThemeProvider } from "styled-components";
 import { theme as appTheme } from "./ui/theme";
 import { GlobalStyle } from "./ui/GlobalStyle";
 import { Container, PageHeader, Button as Btn } from "./ui/primitives";
+import { DialogProvider } from "./ui/Dialog";
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import { API_BASE } from "./lib/config";
@@ -56,6 +57,7 @@ export default function App() {
   return (
     <ThemeProvider theme={appTheme}>
       <GlobalStyle />
+      <DialogProvider>
       <BrowserRouter>
         <Container>
           <PageHeader>
@@ -96,6 +98,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+      </DialogProvider>
     </ThemeProvider>
   );
 }
