@@ -14,7 +14,8 @@ const credentialsSchema = z.object({
 
 router.post("/register", async (req, res) => {
   const parsed = credentialsSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "잘못된 입력입니다" });
+  if (!parsed.success)
+    return res.status(400).json({ error: "잘못된 입력입니다" });
   const { email, password } = parsed.data;
   const db = getDb();
   const existing = db
@@ -37,15 +38,22 @@ router.post("/register", async (req, res) => {
 
 router.post("/login", async (req, res) => {
   const parsed = credentialsSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "잘못된 입력입니다" });
+  if (!parsed.success)
+    return res.status(400).json({ error: "잘못된 입력입니다" });
   const { email, password } = parsed.data;
   const db = getDb();
   const row = db
     .prepare("SELECT id, password_hash FROM users WHERE email = ?")
     .get(email) as { id: number; password_hash: string } | undefined;
-  if (!row) return res.status(401).json({ error: "이메일 또는 비밀번호가 올바르지 않습니다" });
+  if (!row)
+    return res
+      .status(401)
+      .json({ error: "이메일 또는 비밀번호가 올바르지 않습니다" });
   const ok = await bcrypt.compare(password, row.password_hash);
-  if (!ok) return res.status(401).json({ error: "이메일 또는 비밀번호가 올바르지 않습니다" });
+  if (!ok)
+    return res
+      .status(401)
+      .json({ error: "이메일 또는 비밀번호가 올바르지 않습니다" });
   const token = signToken({ userId: row.id, email });
   setAuthCookie(res, token);
   res.json({ id: row.id, email });
