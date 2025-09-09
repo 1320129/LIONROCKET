@@ -143,7 +143,8 @@ router.delete("/:id", requireAuth, (req, res) => {
       }
     | undefined;
   if (!row) return res.status(404).json({ error: "캐릭터를 찾을 수 없습니다" });
-  if (row.owner_user_id !== user.userId) {
+  // Allow delete if user is the owner OR this is a default character (owner_user_id IS NULL)
+  if (row.owner_user_id !== null && row.owner_user_id !== user.userId) {
     return res.status(403).json({ error: "권한이 없습니다" });
   }
   // Delete DB row (messages cascade)
