@@ -22,23 +22,38 @@ type MessageWithStatus = Message & {
 export default function ChatPage() {
   const { id } = useParams();
   const characterId = Number(id);
+  const cachedName = (() => {
+    try {
+      return localStorage.getItem(`characterName:${characterId}`) || undefined;
+    } catch {
+      return undefined;
+    }
+  })();
   const [messages, setMessages] = React.useState<MessageWithStatus[]>([]);
   const [input, setInput] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [loadingOlder, setLoadingOlder] = React.useState(false);
   const [hasMore, setHasMore] = React.useState(true);
-  const [characterName, setCharacterName] = React.useState<string>(`캐릭터 #${characterId}`);
+  const [characterName, setCharacterName] = React.useState<string>(
+    cachedName || `캐릭터 #${characterId}`
+  );
   const listRef = React.useRef<HTMLDivElement | null>(null);
   const stickToBottomRef = React.useRef(true);
 
   React.useEffect(() => {
     (async () => {
+      // Fetch name from server only if we don't have a cached one
+      if (!cachedName) {
+        try {
+          const ch = await apiWithRetry<{ id: number; name: string }>(
+            `/characters/${characterId}`
+          );
+          if (ch?.name) setCharacterName(ch.name);
+        } catch {}
+      }
       try {
         const limit = 30;
-        // fetch character name
-        const ch = await apiWithRetry<{ id: number; name: string }>(`/characters/${characterId}`);
-        if (ch?.name) setCharacterName(ch.name);
         const list = await apiWithRetry<MessageWithStatus[]>(
           `/messages?characterId=${characterId}&limit=${limit}`
         );
@@ -243,6 +258,8 @@ export default function ChatPage() {
           minHeight: 300,
           maxHeight: 480,
           overflowY: "auto",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         {hasMore && (
@@ -252,6 +269,19 @@ export default function ChatPage() {
             </button>
           </div>
         )}
+
+        {loading && messages.length === 0 && (
+          <div style={{ textAlign: "center", color: "#666", padding: 24 }}>
+            대화를 불러오고 있습니다...
+          </div>
+        )}
+
+        {!loading && messages.length === 0 && (
+          <div style={{ textAlign: "center", color: "#666", padding: 24 }}>
+            대화를 시작해보세요!
+          </div>
+        )}
+
         {messages.map((m) => (
           <div key={`${m.role}-${m.id}`} style={{ marginBottom: 8 }}>
             <div style={{ fontSize: 12, color: "#888" }}>
@@ -278,7 +308,7 @@ export default function ChatPage() {
             </div>
           </div>
         ))}
-        {loading && <div>응답 생성 중...</div>}
+
         {error && <div style={{ color: "red" }}>{error}</div>}
       </div>
       <form onSubmit={onSend} style={{ display: "flex", gap: 8 }}>

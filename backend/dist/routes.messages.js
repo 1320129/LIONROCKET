@@ -11,7 +11,7 @@ const listQuery = z.object({
 router.get("/", requireAuth, (req, res) => {
     const parsed = listQuery.safeParse(req.query);
     if (!parsed.success)
-        return res.status(400).json({ error: "Invalid query" });
+        return res.status(400).json({ error: "잘못된 요청입니다" });
     const { characterId, limit, before } = parsed.data;
     const userId = req.user.userId;
     const db = getDb();
@@ -20,7 +20,7 @@ router.get("/", requireAuth, (req, res) => {
         .prepare("SELECT id FROM characters WHERE id = ? AND (owner_user_id IS NULL OR owner_user_id = ?)")
         .get(characterId, userId);
     if (!ch)
-        return res.status(404).json({ error: "Character not found" });
+        return res.status(404).json({ error: "캐릭터를 찾을 수 없습니다" });
     const rows = before
         ? db
             .prepare("SELECT id, role, content, created_at FROM messages WHERE character_id = ? AND user_id = ? AND created_at < ? ORDER BY created_at DESC LIMIT ?")

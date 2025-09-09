@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
 const fileFilter = (_req, file, cb) => {
     const ok = ["image/png", "image/jpeg", "image/webp"].includes(file.mimetype);
     if (!ok)
-        return cb(new Error("Invalid image format"));
+        return cb(new Error("지원되지 않는 이미지 형식입니다"));
     cb(null, true);
 };
 const upload = multer({
@@ -37,16 +37,16 @@ export function seedDefaultCharacters() {
     const db = getDb();
     const defaults = [
         {
-            name: "Sage",
-            prompt: "You are a wise mentor. Give concise, actionable advice.",
+            name: "현자",
+            prompt: "당신은 지혜로운 멘토입니다. 간결하고 실행 가능한 조언만 제공합니다.",
         },
         {
-            name: "Buddy",
-            prompt: "You are a friendly helper. Keep replies casual and kind.",
+            name: "버디",
+            prompt: "당신은 친근한 도우미입니다. 답변은 편안하고 친절하게 유지합니다.",
         },
         {
-            name: "Galaxy",
-            prompt: "You are a sci-fi expert, creative yet practical in tone.",
+            name: "갤럭시",
+            prompt: "당신은 SF 전문가입니다. 창의적이되 실용적인 어조로 답합니다.",
         },
     ];
     for (const d of defaults) {
@@ -67,6 +67,21 @@ router.get("/", requireAuth, (req, res) => {
         .all(user.userId);
     res.json(rows);
 });
+// Get one character (default or owned by user)
+router.get("/:id", requireAuth, (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+        return res.status(400).json({ error: "잘못된 요청입니다" });
+    }
+    const user = req.user;
+    const db = getDb();
+    const row = db
+        .prepare("SELECT id, owner_user_id, name, prompt, thumbnail_path, created_at FROM characters WHERE id = ? AND (owner_user_id IS NULL OR owner_user_id = ?)")
+        .get(id, user.userId);
+    if (!row)
+        return res.status(404).json({ error: "캐릭터를 찾을 수 없습니다" });
+    return res.json(row);
+});
 // Create character (multipart)
 router.post("/", requireAuth, upload.single("thumbnail"), (req, res) => {
     const parsed = createSchema.safeParse({
@@ -74,7 +89,7 @@ router.post("/", requireAuth, upload.single("thumbnail"), (req, res) => {
         prompt: req.body?.prompt,
     });
     if (!parsed.success)
-        return res.status(400).json({ error: "Invalid input" });
+        return res.status(400).json({ error: "잘못된 입력입니다" });
     const { name, prompt } = parsed.data;
     const user = req.user;
     const file = req.file;
@@ -94,6 +109,36 @@ router.post("/", requireAuth, upload.single("thumbnail"), (req, res) => {
         thumbnail_path: relativePath,
         created_at: createdAt,
     });
+});
+// Delete character (owner-only or default)
+router.delete("/:id", requireAuth, (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+        return res.status(400).json({ error: "잘못된 요청입니다" });
+    }
+    const user = req.user;
+    const db = getDb();
+    const row = db
+        .prepare("SELECT id, owner_user_id, thumbnail_path FROM characters WHERE id = ?")
+        .get(id);
+    if (!row)
+        return res.status(404).json({ error: "캐릭터를 찾을 수 없습니다" });
+    // Allow delete if user is the owner OR this is a default character (owner_user_id IS NULL)
+    if (row.owner_user_id !== null && row.owner_user_id !== user.userId) {
+        return res.status(403).json({ error: "권한이 없습니다" });
+    }
+    // Delete DB row (messages cascade)
+    db.prepare("DELETE FROM characters WHERE id = ?").run(id);
+    // Remove thumbnail file if exists
+    if (row.thumbnail_path) {
+        const abs = path.resolve(process.cwd(), row.thumbnail_path);
+        try {
+            if (fs.existsSync(abs))
+                fs.unlinkSync(abs);
+        }
+        catch { }
+    }
+    return res.json({ ok: true });
 });
 export default router;
 //# sourceMappingURL=routes.characters.js.map

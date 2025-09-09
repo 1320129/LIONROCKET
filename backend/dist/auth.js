@@ -30,7 +30,7 @@ export function requireAuth(req, res, next) {
         (req.headers.authorization?.replace("Bearer ", "") ?? "");
     const payload = token ? verifyToken(token) : null;
     if (!payload) {
-        return res.status(401).json({ error: "Unauthorized" });
+        return res.status(401).json({ error: "인증되지 않았습니다" });
     }
     req.user = payload;
     next();

@@ -97,6 +97,14 @@ export default function HomePage() {
     }
   }
 
+  function goChat(c: Character) {
+    saveLastCharacter(c.id);
+    try {
+      localStorage.setItem(`characterName:${c.id}`, c.name);
+    } catch {}
+    location.href = `/chat/${c.id}`;
+  }
+
   if (loading) return <div style={{ padding: 24 }}>불러오는 중...</div>;
   if (error) return <div style={{ padding: 24, color: "red" }}>{error}</div>;
 
@@ -175,9 +183,9 @@ export default function HomePage() {
               </div>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <a href={`/chat/${c.id}`} onClick={() => saveLastCharacter(c.id)}>
+              <button type="button" onClick={() => goChat(c)}>
                 대화하기
-              </a>
+              </button>
               <button type="button" onClick={() => onDeleteCharacter(c.id)}>
                 삭제
               </button>

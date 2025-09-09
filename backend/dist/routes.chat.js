@@ -11,7 +11,7 @@ const bodySchema = z.object({
 router.post("/", requireAuth, async (req, res) => {
     const parsed = bodySchema.safeParse(req.body);
     if (!parsed.success)
-        return res.status(400).json({ error: "Invalid input" });
+        return res.status(400).json({ error: "잘못된 입력입니다" });
     const { characterId, message } = parsed.data;
     const user = req.user;
     const userId = user.userId;
@@ -22,7 +22,7 @@ router.post("/", requireAuth, async (req, res) => {
             .prepare("SELECT id, owner_user_id, prompt FROM characters WHERE id = ? AND (owner_user_id IS NULL OR owner_user_id = ?)")
             .get(characterId, userId);
         if (!ch)
-            return res.status(404).json({ error: "Character not found" });
+            return res.status(404).json({ error: "캐릭터를 찾을 수 없습니다" });
         systemPrompt = ch.prompt;
     }
     const createdAt = Date.now();
@@ -32,7 +32,7 @@ router.post("/", requireAuth, async (req, res) => {
     try {
         const apiKey = process.env.ANTHROPIC_API_KEY;
         if (!apiKey)
-            return res.status(500).json({ error: "Missing ANTHROPIC_API_KEY" });
+            return res.status(500).json({ error: "서버 환경변수 ANTHROPIC_API_KEY가 설정되지 않았습니다" });
         const model = parsed.data.model || "claude-3-5-sonnet-20240620";
         const response = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
@@ -55,7 +55,7 @@ router.post("/", requireAuth, async (req, res) => {
         });
         if (!response.ok) {
             const text = await response.text();
-            return res.status(502).json({ error: `Claude error: ${text}` });
+            return res.status(502).json({ error: `Claude 오류: ${text}` });
         }
         const data = (await response.json());
         const parts = Array.isArray(data?.content) ? data.content : [];
@@ -68,7 +68,7 @@ router.post("/", requireAuth, async (req, res) => {
         return res.json({ reply, createdAt: createdAtAssistant });
     }
     catch (e) {
-        return res.status(500).json({ error: e?.message || "Chat failed" });
+        return res.status(500).json({ error: e?.message || "채팅 처리에 실패했습니다" });
     }
 });
 export default router;
