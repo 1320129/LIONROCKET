@@ -86,6 +86,16 @@ export default function HomePage() {
     setFile(null);
   }
 
+  async function onDeleteCharacter(id: number) {
+    if (!confirm("이 캐릭터를 삭제하시겠습니까? 관련 대화도 함께 삭제됩니다.")) return;
+    try {
+      await api(`/characters/${id}`, { method: "DELETE" });
+      setCharacters((prev) => prev.filter((c) => c.id !== id));
+    } catch (e: any) {
+      alert(e?.message || "삭제 실패");
+    }
+  }
+
   if (loading) return <div style={{ padding: 24 }}>불러오는 중...</div>;
   if (error) return <div style={{ padding: 24, color: "red" }}>{error}</div>;
 
@@ -163,9 +173,20 @@ export default function HomePage() {
                 {c.prompt.slice(0, 80)}
               </div>
             </div>
-            <a href={`/chat/${c.id}`} onClick={() => saveLastCharacter(c.id)}>
-              대화하기
-            </a>
+            {c.owner_user_id && me?.id === c.owner_user_id ? (
+              <div style={{ display: "flex", gap: 8 }}>
+                <a href={`/chat/${c.id}`} onClick={() => saveLastCharacter(c.id)}>
+                  대화하기
+                </a>
+                <button type="button" onClick={() => onDeleteCharacter(c.id)}>
+                  삭제
+                </button>
+              </div>
+            ) : (
+              <a href={`/chat/${c.id}`} onClick={() => saveLastCharacter(c.id)}>
+                대화하기
+              </a>
+            )}
           </div>
         ))}
       </div>
