@@ -1,6 +1,7 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
 import { apiWithRetry } from "../lib/api";
+import { Button, Card, EmptyState, Row, Input } from "../ui/primitives";
 import {
   readDraft,
   saveDraft,
@@ -239,20 +240,13 @@ export default function ChatPage() {
 
   return (
     <div style={{ padding: 24, display: "grid", gap: 12 }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+      <Row style={{ justifyContent: "space-between" }}>
         <Link to="/">← 캐릭터 목록</Link>
         <div style={{ fontWeight: 600 }}>{characterName}</div>
-      </div>
-      <div
+      </Row>
+      <Card
         ref={listRef}
         onScroll={onScroll}
-        className="card"
         style={{
           padding: 12,
           minHeight: 300,
@@ -264,22 +258,18 @@ export default function ChatPage() {
       >
         {hasMore && (
           <div style={{ marginBottom: 8 }}>
-            <button onClick={() => void loadOlder()} disabled={loadingOlder}>
+            <Button onClick={() => void loadOlder()} disabled={loadingOlder}>
               {loadingOlder ? "불러오는 중..." : "이전 메시지 더 보기"}
-            </button>
+            </Button>
           </div>
         )}
 
         {loading && messages.length === 0 && (
-          <div style={{ textAlign: "center", color: "#666", padding: 24 }}>
-            대화를 불러오고 있습니다...
-          </div>
+          <EmptyState>대화를 불러오고 있습니다...</EmptyState>
         )}
 
         {!loading && messages.length === 0 && (
-          <div style={{ textAlign: "center", color: "#666", padding: 24 }}>
-            대화를 시작해보세요!
-          </div>
+          <EmptyState>대화를 시작해보세요!</EmptyState>
         )}
 
         {messages.map((m) => (
@@ -293,13 +283,12 @@ export default function ChatPage() {
                 <>
                   {" "}
                   <span className="muted">({m.error || "실패"})</span>{" "}
-                  <button
-                    className="btn"
+                  <Button
                     onClick={() => onRetry(m.id)}
                     style={{ marginLeft: 8 }}
                   >
                     재전송
-                  </button>
+                  </Button>
                 </>
               )}
               {m.role === "user" && m.status === "pending" && (
@@ -310,18 +299,18 @@ export default function ChatPage() {
         ))}
 
         {error && <div style={{ color: "red" }}>{error}</div>}
-      </div>
+      </Card>
       <form onSubmit={onSend} style={{ display: "flex", gap: 8 }}>
-        <input
+        <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="메시지를 입력하세요 (200자 이내)"
           maxLength={200}
           style={{ flex: 1 }}
         />
-        <button type="submit" disabled={loading}>
+        <Button type="submit" variant="primary" disabled={loading}>
           보내기
-        </button>
+        </Button>
       </form>
     </div>
   );

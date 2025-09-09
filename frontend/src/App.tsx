@@ -1,5 +1,9 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ThemeProvider } from "styled-components";
+import { theme as appTheme } from "./ui/theme";
+import { GlobalStyle } from "./ui/GlobalStyle";
+import { Container, PageHeader, Button as Btn } from "./ui/primitives";
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import { API_BASE } from "./lib/config";
@@ -25,7 +29,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const [theme, setTheme] = React.useState<"light" | "dark">(
+  const [colorMode, setColorMode] = React.useState<"light" | "dark">(
     () =>
       readTheme() ||
       (window.matchMedia &&
@@ -36,58 +40,62 @@ export default function App() {
   React.useEffect(() => {
     const root = document.documentElement;
     root.classList.remove("theme-dark", "theme-light");
-    if (theme === "dark") root.classList.add("theme-dark");
+    if (colorMode === "dark") root.classList.add("theme-dark");
     else root.classList.add("theme-light");
-    saveTheme(theme);
-  }, [theme]);
+    saveTheme(colorMode);
+  }, [colorMode]);
   React.useEffect(() => {
     const ch = getChannel();
     if (!ch) return;
     const onMessage = (ev: MessageEvent<any>) => {
-      if (ev.data?.type === "theme") setTheme(ev.data.value);
+      if (ev.data?.type === "theme") setColorMode(ev.data.value);
     };
     ch.addEventListener("message", onMessage as any);
     return () => ch.removeEventListener("message", onMessage as any);
   }, []);
   return (
-    <BrowserRouter>
-      <div className="container">
-        <div className="row" style={{ justifyContent: "space-between" }}>
-          <div style={{ fontWeight: 700 }}>AI Chat</div>
-          <div className="row">
-            <button
-              className="btn"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            >
-              {theme === "dark" ? "라이트" : "다크"} 모드
-            </button>
-          </div>
-        </div>
-      </div>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="/"
-          element={
-            <RequireAuth>
-              <div className="container">
-                <HomePage />
-              </div>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/chat/:id"
-          element={
-            <RequireAuth>
-              <div className="container">
-                <ChatPage />
-              </div>
-            </RequireAuth>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <ThemeProvider theme={appTheme}>
+      <GlobalStyle />
+      <BrowserRouter>
+        <Container>
+          <PageHeader>
+            <div style={{ fontWeight: 700 }}>AI Chat</div>
+            <div className="row">
+              <Btn
+                onClick={() =>
+                  setColorMode(colorMode === "dark" ? "light" : "dark")
+                }
+              >
+                {colorMode === "dark" ? "라이트" : "다크"} 모드
+              </Btn>
+            </div>
+          </PageHeader>
+        </Container>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/"
+            element={
+              <RequireAuth>
+                <Container>
+                  <HomePage />
+                </Container>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/chat/:id"
+            element={
+              <RequireAuth>
+                <Container>
+                  <ChatPage />
+                </Container>
+              </RequireAuth>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }

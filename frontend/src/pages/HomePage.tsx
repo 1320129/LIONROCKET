@@ -2,6 +2,15 @@ import React from "react";
 import { api } from "../lib/api";
 import { API_BASE } from "../lib/config";
 import { broadcastLogout, saveLastCharacter } from "../lib/persist";
+import {
+  Button,
+  Card,
+  Input,
+  Textarea,
+  Row,
+  Grid,
+  SectionTitle,
+} from "../ui/primitives";
 
 type Character = {
   id: number;
@@ -110,89 +119,104 @@ export default function HomePage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <h2>환영합니다</h2>
+      <h2 style={{ marginBottom: 8 }}>환영합니다</h2>
       <div style={{ marginBottom: 12 }}>로그인: {me?.email}</div>
-      <button onClick={onLogout}>로그아웃</button>
+      <Button onClick={onLogout}>로그아웃</Button>
 
-      <h3 style={{ marginTop: 24 }}>캐릭터 생성</h3>
-      <form
-        onSubmit={onCreateCharacter}
-        style={{ display: "grid", gap: 8, maxWidth: 480 }}
-      >
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="이름"
-          required
-        />
-        <textarea
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="프롬프트"
-          required
-        />
-        <input
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
-        />
-        {previewUrl && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <img
-              src={previewUrl}
-              width={64}
-              height={64}
-              style={{ objectFit: "cover", borderRadius: 8 }}
-            />
-            <button type="button" onClick={() => setFile(null)}>
-              이미지 제거
-            </button>
-          </div>
-        )}
-        {fileError && <div style={{ color: "red" }}>{fileError}</div>}
-        <button type="submit">생성</button>
-      </form>
-
-      <h3 style={{ marginTop: 24 }}>캐릭터 목록</h3>
-      <div style={{ display: "grid", gap: 12 }}>
-        {characters.map((c) => (
-          <div
-            key={c.id}
-            className="card"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              padding: 8,
-            }}
+      <Grid columns={2} style={{ marginTop: 24 }}>
+        <div>
+          <SectionTitle>캐릭터 생성</SectionTitle>
+          <form
+            onSubmit={onCreateCharacter}
+            style={{ display: "grid", gap: 8, maxWidth: 520 }}
           >
-            {c.thumbnail_path && (
-              <img
-                src={`${API_BASE}/${c.thumbnail_path}`}
-                alt={c.name}
-                width={48}
-                height={48}
-                loading="lazy"
-                style={{ objectFit: "cover", borderRadius: 8 }}
-              />
-            )}
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600 }}>{c.name}</div>
-              <div className="muted" style={{ fontSize: 12 }}>
-                {c.prompt.slice(0, 80)}
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="이름"
+              required
+            />
+            <Textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="프롬프트"
+              required
+            />
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
+            {previewUrl && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <img
+                  src={previewUrl}
+                  width={64}
+                  height={64}
+                  style={{ objectFit: "cover", borderRadius: 8 }}
+                />
+                <Button type="button" onClick={() => setFile(null)}>
+                  이미지 제거
+                </Button>
               </div>
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button type="button" onClick={() => goChat(c)}>
-                대화하기
-              </button>
-              <button type="button" onClick={() => onDeleteCharacter(c.id)}>
-                삭제
-              </button>
-            </div>
+            )}
+            {fileError && <div style={{ color: "red" }}>{fileError}</div>}
+            <Button type="submit" variant="primary">
+              생성
+            </Button>
+          </form>
+        </div>
+
+        <div>
+          <SectionTitle>캐릭터 목록</SectionTitle>
+          <div style={{ display: "grid", gap: 12 }}>
+            {characters.map((c) => (
+              <Card
+                key={c.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: 12,
+                }}
+              >
+                {c.thumbnail_path && (
+                  <img
+                    src={`${API_BASE}/${c.thumbnail_path}`}
+                    alt={c.name}
+                    width={48}
+                    height={48}
+                    loading="lazy"
+                    style={{ objectFit: "cover", borderRadius: 8 }}
+                  />
+                )}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600 }}>{c.name}</div>
+                  <div className="muted" style={{ fontSize: 12 }}>
+                    {c.prompt.slice(0, 80)}
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    onClick={() => goChat(c)}
+                  >
+                    대화하기
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="danger"
+                    onClick={() => onDeleteCharacter(c.id)}
+                  >
+                    삭제
+                  </Button>
+                </div>
+              </Card>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      </Grid>
     </div>
   );
 }
