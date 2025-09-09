@@ -10,7 +10,7 @@ export async function api<T>(
     ...options,
   });
   if (!res.ok) {
-    let msg = "Request failed";
+    let msg = "요청이 실패했습니다";
     try {
       const data = (await res.json()) as any;
       msg = data?.error || msg;
@@ -45,5 +45,5 @@ export async function apiWithRetry<T>(
       await wait(delay);
     }
   }
-  throw lastError instanceof Error ? lastError : new Error("Request failed");
+  throw lastError instanceof Error ? lastError : new Error("요청이 실패했습니다");
 }

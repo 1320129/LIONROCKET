@@ -25,7 +25,7 @@ const storage = multer.diskStorage({
 
 const fileFilter: multer.Options["fileFilter"] = (_req, file, cb) => {
   const ok = ["image/png", "image/jpeg", "image/webp"].includes(file.mimetype);
-  if (!ok) return cb(new Error("Invalid image format"));
+  if (!ok) return cb(new Error("지원되지 않는 이미지 형식입니다"));
   cb(null, true);
 };
 
@@ -45,16 +45,16 @@ export function seedDefaultCharacters() {
   const db = getDb();
   const defaults = [
     {
-      name: "Sage",
-      prompt: "You are a wise mentor. Give concise, actionable advice.",
+      name: "현자",
+      prompt: "당신은 지혜로운 멘토입니다. 간결하고 실행 가능한 조언만 제공합니다.",
     },
     {
-      name: "Buddy",
-      prompt: "You are a friendly helper. Keep replies casual and kind.",
+      name: "버디",
+      prompt: "당신은 친근한 도우미입니다. 답변은 편안하고 친절하게 유지합니다.",
     },
     {
-      name: "Galaxy",
-      prompt: "You are a sci-fi expert, creative yet practical in tone.",
+      name: "갤럭시",
+      prompt: "당신은 SF 전문가입니다. 창의적이되 실용적인 어조로 답합니다.",
     },
   ];
   for (const d of defaults) {
@@ -96,7 +96,7 @@ router.post("/", requireAuth, upload.single("thumbnail"), (req, res) => {
     name: req.body?.name,
     prompt: req.body?.prompt,
   });
-  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  if (!parsed.success) return res.status(400).json({ error: "잘못된 입력입니다" });
   const { name, prompt } = parsed.data;
   const user = (req as any).user as { userId: number };
   const file = req.file;

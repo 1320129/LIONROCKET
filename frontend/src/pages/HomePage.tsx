@@ -86,7 +86,7 @@ export default function HomePage() {
     setFile(null);
   }
 
-  if (loading) return <div style={{ padding: 24 }}>Loading...</div>;
+  if (loading) return <div style={{ padding: 24 }}>불러오는 중...</div>;
   if (error) return <div style={{ padding: 24, color: "red" }}>{error}</div>;
 
   return (

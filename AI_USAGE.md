@@ -1,8 +1,8 @@
-# AI Usage Notes
+# AI 사용 안내
 
-## Claude (Anthropic) Proxy
+## Claude(Anthropic) 프록시
 
-- Server-side only: API 키는 백엔드 `.env`에 저장합니다. 프론트엔드로 절대 노출하지 않습니다.
+- 서버 전용: API 키는 백엔드 `.env`에 저장합니다. 프론트엔드로 절대 노출하지 않습니다.
 - 환경변수
   - `ANTHROPIC_API_KEY`=발급받은 키(`sk-ant-...`)
   - (옵션) `CORS_ORIGIN`=http://localhost:5173
@@ -14,8 +14,8 @@
   - Cookie: 로그인 세션 필요
   - Body
     - `message`: string (1~200자)
-    - `characterId`: number (optional, 캐릭터 프롬프트 적용 시)
-    - `model`: string (optional, 기본값: `claude-3-5-sonnet-20240620`)
+    - `characterId`: number (선택, 캐릭터 프롬프트 적용 시)
+    - `model`: string (선택, 기본값: `claude-3-5-sonnet-20240620`)
   - Response
     - `{ reply: string, createdAt: number }`
 
