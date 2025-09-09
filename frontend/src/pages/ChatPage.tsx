@@ -28,6 +28,7 @@ export default function ChatPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [loadingOlder, setLoadingOlder] = React.useState(false);
   const [hasMore, setHasMore] = React.useState(true);
+  const [characterName, setCharacterName] = React.useState<string>(`캐릭터 #${characterId}`);
   const listRef = React.useRef<HTMLDivElement | null>(null);
   const stickToBottomRef = React.useRef(true);
 
@@ -35,6 +36,9 @@ export default function ChatPage() {
     (async () => {
       try {
         const limit = 30;
+        // fetch character name
+        const ch = await apiWithRetry<{ id: number; name: string }>(`/characters/${characterId}`);
+        if (ch?.name) setCharacterName(ch.name);
         const list = await apiWithRetry<MessageWithStatus[]>(
           `/messages?characterId=${characterId}&limit=${limit}`
         );
@@ -228,7 +232,7 @@ export default function ChatPage() {
         }}
       >
         <Link to="/">← 캐릭터 목록</Link>
-        <div style={{ fontWeight: 600 }}>캐릭터 #{characterId}</div>
+        <div style={{ fontWeight: 600 }}>{characterName}</div>
       </div>
       <div
         ref={listRef}

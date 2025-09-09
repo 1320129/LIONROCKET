@@ -92,6 +92,32 @@ router.get("/", requireAuth, (req, res) => {
   res.json(rows);
 });
 
+// Get one character (default or owned by user)
+router.get("/:id", requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: "잘못된 요청입니다" });
+  }
+  const user = (req as any).user as { userId: number };
+  const db = getDb();
+  const row = db
+    .prepare(
+      "SELECT id, owner_user_id, name, prompt, thumbnail_path, created_at FROM characters WHERE id = ? AND (owner_user_id IS NULL OR owner_user_id = ?)"
+    )
+    .get(id, user.userId) as
+    | {
+        id: number;
+        owner_user_id: number | null;
+        name: string;
+        prompt: string;
+        thumbnail_path: string | null;
+        created_at: number;
+      }
+    | undefined;
+  if (!row) return res.status(404).json({ error: "캐릭터를 찾을 수 없습니다" });
+  return res.json(row);
+});
+
 // Create character (multipart)
 router.post("/", requireAuth, upload.single("thumbnail"), (req, res) => {
   const parsed = createSchema.safeParse({
@@ -123,7 +149,7 @@ router.post("/", requireAuth, upload.single("thumbnail"), (req, res) => {
   });
 });
 
-// Delete character (owner-only)
+// Delete character (owner-only or default)
 router.delete("/:id", requireAuth, (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
