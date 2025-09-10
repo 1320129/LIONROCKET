@@ -8,15 +8,7 @@ import {
   FlexContainer,
   MutedText,
 } from "../styles/styled";
-
-type Character = {
-  id: number;
-  owner_user_id: number | null;
-  name: string;
-  prompt: string;
-  thumbnail_path: string | null;
-  created_at: number;
-};
+import { Character } from "../types/character";
 
 type CharacterCardProps = {
   character: Character;
