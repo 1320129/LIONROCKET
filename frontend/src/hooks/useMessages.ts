@@ -5,18 +5,7 @@ import {
   InfiniteData,
 } from "@tanstack/react-query";
 import { apiWithRetry } from "../lib/api";
-
-type Message = {
-  id: number;
-  role: "user" | "assistant";
-  content: string;
-  created_at: number;
-};
-
-type MessageWithStatus = Message & {
-  status?: "pending" | "failed" | "sent";
-  error?: string;
-};
+import { MessageWithStatus } from "../types/message";
 
 const LIMIT = 30;
 

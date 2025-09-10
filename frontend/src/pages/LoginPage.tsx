@@ -22,7 +22,13 @@ export default function LoginPage() {
   }, []);
 
   const authMutation = useMutation({
-    mutationFn: async ({ email, password }: { email: string; password: string }) => {
+    mutationFn: async ({
+      email,
+      password,
+    }: {
+      email: string;
+      password: string;
+    }) => {
       const path = mode === "login" ? "/auth/login" : "/auth/register";
       return api(path, {
         method: "POST",
@@ -76,9 +82,15 @@ export default function LoginPage() {
             required
           />
           <button type="submit" disabled={authMutation.isPending}>
-            {authMutation.isPending ? "처리중..." : mode === "login" ? "로그인" : "회원가입"}
+            {authMutation.isPending
+              ? "처리중..."
+              : mode === "login"
+              ? "로그인"
+              : "회원가입"}
           </button>
-          {authMutation.error && <ErrorText>{authMutation.error.message}</ErrorText>}
+          {authMutation.error && (
+            <ErrorText>{authMutation.error.message}</ErrorText>
+          )}
         </div>
       </LoginForm>
     </LoginContainer>

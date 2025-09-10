@@ -2,15 +2,7 @@ import React from "react";
 import { Button, Card, EmptyState } from "../ui/primitives";
 import { MessageItem } from "./MessageItem";
 import { LoadMoreButton, ErrorText } from "../ui/styled";
-
-type MessageWithStatus = {
-  id: number;
-  role: "user" | "assistant";
-  content: string;
-  created_at: number;
-  status?: "pending" | "failed" | "sent";
-  error?: string;
-};
+import { MessageWithStatus } from "../types/message";
 
 type MessageListProps = {
   messages: MessageWithStatus[];

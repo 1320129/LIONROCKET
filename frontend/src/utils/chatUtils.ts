@@ -1,4 +1,5 @@
 import { readLastCharacter } from "../lib/persist";
+import { MessageWithStatus } from "../types/message";
 
 export function validateCharacterId(characterId: number): boolean {
   return !Number.isNaN(characterId) && characterId > 0;
@@ -15,13 +16,7 @@ export function formatMessageTime(timestamp: number): string {
   return new Date(timestamp).toLocaleTimeString();
 }
 
-export function createUserMessage(content: string): {
-  id: number;
-  role: "user";
-  content: string;
-  created_at: number;
-  status: "pending";
-} {
+export function createUserMessage(content: string): MessageWithStatus {
   const now = Date.now();
   return {
     id: now,
@@ -35,13 +30,7 @@ export function createUserMessage(content: string): {
 export function createAssistantMessage(
   content: string,
   createdAt: number
-): {
-  id: number;
-  role: "assistant";
-  content: string;
-  created_at: number;
-  status: "sent";
-} {
+): MessageWithStatus {
   return {
     id: Date.now() + 1,
     role: "assistant",

@@ -1,15 +1,7 @@
 import React from "react";
 import { apiWithRetry } from "../lib/api";
 import { useDialog } from "../ui/useDialog";
-
-type MessageWithStatus = {
-  id: number;
-  role: "user" | "assistant";
-  content: string;
-  created_at: number;
-  status?: "pending" | "failed" | "sent";
-  error?: string;
-};
+import { MessageWithStatus } from "../types/message";
 
 export function useChat(characterId: number) {
   const [loading, setLoading] = React.useState(false);

@@ -17,15 +17,7 @@ import {
 
 import { Row } from "../ui/primitives";
 import { ChatContainer, ChatHeader } from "../ui/styled";
-
-type MessageWithStatus = {
-  id: number;
-  role: "user" | "assistant";
-  content: string;
-  created_at: number;
-  status?: "pending" | "failed" | "sent";
-  error?: string;
-};
+import { MessageWithStatus } from "../types/message";
 
 export default function ChatPage() {
   const { id } = useParams();
