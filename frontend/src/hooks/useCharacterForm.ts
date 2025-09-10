@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useCallback } from "react";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 
 import { api } from "../lib/api";
 import { Character } from "../types/character";
@@ -12,6 +12,7 @@ export type CharacterFormData = {
   fileError: string | null;
 };
 
+const FORM_QUERY_KEY = ["characterForm"] as const;
 const initialFormData: CharacterFormData = {
   name: "",
   prompt: "",
@@ -20,9 +21,15 @@ const initialFormData: CharacterFormData = {
 };
 
 export function useCharacterForm(onSuccess?: () => void) {
-  const [formData, setFormData] = useState<CharacterFormData>(initialFormData);
   const dialog = useDialog();
   const queryClient = useQueryClient();
+
+  // React Query로 폼 상태 관리
+  const { data: formData = initialFormData } = useQuery({
+    queryKey: FORM_QUERY_KEY,
+    queryFn: () => initialFormData,
+    staleTime: Infinity, // 폼 상태는 항상 최신으로 유지
+  });
 
   const previewUrl = useMemo(
     () => (formData.file ? URL.createObjectURL(formData.file) : null),
@@ -67,15 +74,19 @@ export function useCharacterForm(onSuccess?: () => void) {
     return null;
   }
 
-  function updateFormData(updates: Partial<CharacterFormData>) {
-    setFormData(prev => ({ ...prev, ...updates }));
-  }
+  // React Query로 상태 업데이트
+  const updateFormData = useCallback((updates: Partial<CharacterFormData>) => {
+    queryClient.setQueryData(FORM_QUERY_KEY, (prev: CharacterFormData) => ({
+      ...prev,
+      ...updates,
+    }));
+  }, [queryClient]);
 
-  function resetForm() {
-    setFormData(initialFormData);
-  }
+  const resetForm = useCallback(() => {
+    queryClient.setQueryData(FORM_QUERY_KEY, initialFormData);
+  }, [queryClient]);
 
-  function handleFileChange(file: File | null) {
+  const handleFileChange = useCallback((file: File | null) => {
     if (!file) {
       updateFormData({ file: null, fileError: null });
       return;
@@ -83,9 +94,9 @@ export function useCharacterForm(onSuccess?: () => void) {
 
     const error = validateFile(file);
     updateFormData({ file, fileError: error });
-  }
+  }, [updateFormData]);
 
-  function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name.trim()) {
@@ -111,7 +122,7 @@ export function useCharacterForm(onSuccess?: () => void) {
     }
 
     createCharacterMutation.mutate(formDataToSend);
-  }
+  }, [formData, dialog, createCharacterMutation]);
 
   return {
     formData,
