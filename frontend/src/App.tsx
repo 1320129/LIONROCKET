@@ -1,14 +1,10 @@
 import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
-import {
-  QueryClient,
-  QueryClientProvider,
-  useQuery,
-} from "@tanstack/react-query";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 
 import { getChannel, readTheme, saveTheme } from "./lib/persist";
-import { api } from "./lib/api";
+import { queryClient, queryFn } from "./queryClient";
 
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
@@ -20,22 +16,12 @@ import { Container, PageHeader, Button as Btn, Row } from "./styles/primitives";
 import { DialogProvider } from "./components/Dialog";
 import { AuthLoading, AppTitle } from "./styles/styled";
 
-// QueryClient 인스턴스 생성
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5분
-      retry: 1,
-    },
-  },
-});
-
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { data, isLoading, error } = useQuery({
     queryKey: ["auth", "check"],
     queryFn: async () => {
       try {
-        await api("/auth/me");
+        await queryFn("/auth/me");
         return true;
       } catch {
         return false;

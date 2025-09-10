@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
-import { api } from "../lib/api";
+import { queryFn } from "../queryClient";
 import { broadcastLogout } from "../lib/persist";
 
 export function useAuth() {
@@ -13,12 +13,12 @@ export function useAuth() {
     error: meError,
   } = useQuery({
     queryKey: ["auth", "me"],
-    queryFn: () => api<{ id: number; email: string }>("/auth/me"),
+    queryFn: () => queryFn<{ id: number; email: string }>("/auth/me"),
   });
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      return api("/auth/logout", { method: "POST" });
+      return queryFn("/auth/logout", { method: "POST" });
     },
     onSuccess: () => {
       broadcastLogout();

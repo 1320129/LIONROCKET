@@ -1,54 +1,9 @@
-import { API_BASE } from "./config";
+import { queryFn } from "../queryClient";
 
-export type ApiOptions = RequestInit & {
-  timeout?: number;
-};
+export type ApiOptions = RequestInit;
 
-export async function api<T>(
-  path: string,
-  options: ApiOptions = {}
-): Promise<T> {
-  const { timeout = 10000, ...fetchOptions } = options;
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    const res = await fetch(`${API_BASE}${path}`, {
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        ...(fetchOptions.headers || {}),
-      },
-      signal: controller.signal,
-      ...fetchOptions,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!res.ok) {
-      let msg = "요청이 실패했습니다";
-      try {
-        const data = (await res.json()) as { error?: string };
-        msg = data?.error || msg;
-      } catch {
-        // JSON 파싱 실패 시 기본 메시지 사용
-      }
-      throw new Error(msg);
-    }
-
-    try {
-      return (await res.json()) as T;
-    } catch {
-      return undefined as unknown as T;
-    }
-  } catch (error) {
-    clearTimeout(timeoutId);
-    if (error instanceof Error && error.name === "AbortError") {
-      throw new Error("요청 시간이 초과되었습니다");
-    }
-    throw error;
-  }
+export function api<T>(path: string, options: ApiOptions = {}) {
+  return queryFn<T>(path, options);
 }
 
 export async function apiWithRetry<T>(
@@ -68,7 +23,6 @@ export async function apiWithRetry<T>(
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
-  throw lastError instanceof Error
-    ? lastError
-    : new Error("요청이 실패했습니다");
+  if (lastError instanceof Error) throw lastError;
+  throw new Error("요청이 실패했습니다");
 }

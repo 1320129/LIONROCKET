@@ -4,7 +4,7 @@ import {
   useQueryClient,
   InfiniteData,
 } from "@tanstack/react-query";
-import { apiWithRetry } from "../lib/api";
+import { queryFn } from "../queryClient";
 import { MessageWithStatus } from "../types/message";
 
 const LIMIT = 30;
@@ -23,10 +23,11 @@ export function useMessages(characterId: number) {
     isFetchingNextPage,
   } = useInfiniteQuery<MessageWithStatus[]>({
     queryKey: ["messages", characterId],
-    queryFn: ({ pageParam }) =>
-      apiWithRetry<MessageWithStatus[]>(
+    queryFn: ({ pageParam, signal }) =>
+      queryFn<MessageWithStatus[]>(
         `/messages?characterId=${characterId}&limit=${LIMIT}` +
-          (pageParam ? `&before=${pageParam}` : "")
+          (pageParam ? `&before=${pageParam}` : ""),
+        { signal }
       ),
     initialPageParam: undefined,
     getNextPageParam: (lastPage) =>
