@@ -1,53 +1,24 @@
-import { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
 import { api } from "../lib/api";
-import { API_BASE } from "../lib/config";
-import { broadcastLogout, saveLastCharacter } from "../lib/persist";
+import { broadcastLogout } from "../lib/persist";
 
-import {
-  Button,
-  Card,
-  Input,
-  Textarea,
-  Grid,
-  SectionTitle,
-} from "../styles/primitives";
-import { useDialog } from "../hooks/useDialog";
+import { Button, Grid, SectionTitle } from "../styles/primitives";
 import {
   LoadingContainer,
   ErrorContainer,
   PageContainer,
   Title,
   Subtitle,
-  FormContainer,
-  GridContainer,
-  CharacterCard,
-  CharacterInfo,
-  CharacterName,
-  CharacterMeta,
-  ImagePreview,
-  PreviewImage,
-  ThumbnailImage,
-  ErrorText,
-  FlexContainer,
-  MutedText,
   GridWithMargin,
 } from "../styles/styled";
 
-type Character = {
-  id: number;
-  owner_user_id: number | null;
-  name: string;
-  prompt: string;
-  thumbnail_path: string | null;
-  created_at: number;
-};
+import CharacterForm from "../components/CharacterForm";
+import CharacterList from "../components/CharacterList";
+import type { Character } from "../types/character";
 
 export default function HomePage() {
-  const dialog = useDialog();
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   // react-query로 데이터 페칭
@@ -69,15 +40,6 @@ export default function HomePage() {
     queryFn: () => api<Character[]>("/characters"),
   });
 
-  const [name, setName] = useState("");
-  const [prompt, setPrompt] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [fileError, setFileError] = useState<string | null>(null);
-  const previewUrl = useMemo(
-    () => (file ? URL.createObjectURL(file) : null),
-    [file]
-  );
-
   const loading = meLoading || charactersLoading;
   const error = meError?.message || charactersError?.message || null;
 
@@ -85,86 +47,6 @@ export default function HomePage() {
     await api("/auth/logout", { method: "POST" });
     broadcastLogout();
     navigate("/login", { replace: true });
-  }
-
-  const createCharacterMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      return api<Character>("/characters", {
-        method: "POST",
-        body: formData,
-      });
-    },
-    onSuccess: (newChar) => {
-      queryClient.setQueryData(["characters"], (old: Character[] = []) => [
-        newChar,
-        ...old,
-      ]);
-      setName("");
-      setPrompt("");
-      setFile(null);
-      setFileError(null);
-    },
-    onError: async (e: unknown) => {
-      await dialog.alert(e instanceof Error ? e.message : "생성 실패", "오류");
-    },
-  });
-
-  async function onCreateCharacter(e: React.FormEvent) {
-    e.preventDefault();
-    setFileError(null);
-    if (file) {
-      const validTypes = ["image/png", "image/jpeg", "image/webp"];
-      if (!validTypes.includes(file.type)) {
-        setFileError("PNG/JPEG/WEBP만 업로드 가능합니다.");
-        return;
-      }
-      const max = 2 * 1024 * 1024;
-      if (file.size > max) {
-        setFileError("이미지 최대 2MB까지 허용됩니다.");
-        return;
-      }
-    }
-    const fd = new FormData();
-    fd.append("name", name);
-    fd.append("prompt", prompt);
-    if (file) fd.append("thumbnail", file);
-
-    createCharacterMutation.mutate(fd);
-  }
-
-  const deleteCharacterMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return api(`/characters/${id}`, { method: "DELETE" });
-    },
-    onSuccess: (_, id) => {
-      queryClient.setQueryData(["characters"], (old: Character[] = []) =>
-        old.filter((c) => c.id !== id)
-      );
-    },
-    onError: async (e: unknown) => {
-      await dialog.alert(e instanceof Error ? e.message : "삭제 실패", "오류");
-    },
-  });
-
-  async function onDeleteCharacter(id: number) {
-    const ok = await dialog.confirm(
-      "이 캐릭터를 삭제하시겠습니까? 관련 대화도 함께 삭제됩니다.",
-      "삭제 확인",
-      "삭제",
-      "취소"
-    );
-    if (!ok) return;
-    deleteCharacterMutation.mutate(id);
-  }
-
-  function goChat(c: Character) {
-    saveLastCharacter(c.id);
-    try {
-      localStorage.setItem(`characterName:${c.id}`, c.name);
-    } catch {
-      // localStorage 접근 실패 시 무시
-    }
-    navigate(`/chat/${c.id}`);
   }
 
   if (loading) return <LoadingContainer>불러오는 중...</LoadingContainer>;
@@ -180,80 +62,12 @@ export default function HomePage() {
         <Grid columns={2}>
           <div>
             <SectionTitle>캐릭터 생성</SectionTitle>
-            <FormContainer onSubmit={onCreateCharacter}>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="이름"
-                required
-              />
-              <Textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="프롬프트"
-                required
-              />
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-              />
-              {previewUrl && (
-                <ImagePreview>
-                  <PreviewImage src={previewUrl} width={64} height={64} />
-                  <Button type="button" onClick={() => setFile(null)}>
-                    이미지 제거
-                  </Button>
-                </ImagePreview>
-              )}
-              {fileError && <ErrorText>{fileError}</ErrorText>}
-              <Button type="submit" variant="primary">
-                생성
-              </Button>
-            </FormContainer>
+            <CharacterForm />
           </div>
 
           <div>
             <SectionTitle>캐릭터 목록</SectionTitle>
-            <GridContainer>
-              {characters.map((c) => (
-                <Card key={c.id}>
-                  <CharacterCard>
-                    {c.thumbnail_path && (
-                      <ThumbnailImage
-                        src={`${API_BASE}/${c.thumbnail_path}`}
-                        alt={c.name}
-                        width={48}
-                        height={48}
-                        loading="lazy"
-                      />
-                    )}
-                    <CharacterInfo>
-                      <CharacterName>{c.name}</CharacterName>
-                      <CharacterMeta>
-                        <MutedText>{c.prompt.slice(0, 80)}</MutedText>
-                      </CharacterMeta>
-                    </CharacterInfo>
-                    <FlexContainer>
-                      <Button
-                        type="button"
-                        variant="primary"
-                        onClick={() => goChat(c)}
-                      >
-                        대화하기
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="danger"
-                        onClick={() => onDeleteCharacter(c.id)}
-                      >
-                        삭제
-                      </Button>
-                    </FlexContainer>
-                  </CharacterCard>
-                </Card>
-              ))}
-            </GridContainer>
+            <CharacterList characters={characters} />
           </div>
         </Grid>
       </GridWithMargin>
