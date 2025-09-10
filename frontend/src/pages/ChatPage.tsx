@@ -30,17 +30,16 @@ export default function ChatPage() {
   const { characterName } = useCharacter(characterId);
   const {
     messages,
-    loading: messagesLoading,
-    loadingOlder,
-    hasMore,
+    status,
     error,
     listRef,
-    loadOlder,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     addMessage,
     updateMessage,
     onScroll,
     scrollToBottom,
-    setError,
   } = useMessages(characterId);
   const {
     loading: chatLoading,
@@ -75,27 +74,17 @@ export default function ChatPage() {
         updateMessage(userMsg.id, { status: "sent" });
         addMessage(assistantMsg);
         scrollToBottom();
-        setError(null);
       };
 
       const onError = (userMsg: MessageWithStatus, errorMsg: string) => {
         addMessage(userMsg);
         updateMessage(userMsg.id, { status: "failed", error: errorMsg });
-        setError(errorMsg);
       };
 
       await sendMessage(input, onSuccess, onError);
       setInput("");
     },
-    [
-      input,
-      sendMessage,
-      addMessage,
-      updateMessage,
-      scrollToBottom,
-      setError,
-      setInput,
-    ]
+    [input, sendMessage, addMessage, updateMessage, scrollToBottom, setInput]
   );
 
   const handleRetry = useCallback(
@@ -103,7 +92,6 @@ export default function ChatPage() {
       const target = messages.find((m) => m.id === messageId);
       if (!target) return;
 
-      setError(null);
       updateMessage(messageId, { status: "pending", error: undefined });
 
       const onSuccess = (assistantMsg: MessageWithStatus) => {
@@ -114,19 +102,11 @@ export default function ChatPage() {
 
       const onError = (msgId: number, errorMsg: string) => {
         updateMessage(msgId, { status: "failed", error: errorMsg });
-        setError(errorMsg);
       };
 
       await retryMessage(messageId, target.content, onSuccess, onError);
     },
-    [
-      messages,
-      retryMessage,
-      updateMessage,
-      addMessage,
-      scrollToBottom,
-      setError,
-    ]
+    [messages, retryMessage, updateMessage, addMessage, scrollToBottom]
   );
 
   useEffect(() => {
@@ -135,7 +115,7 @@ export default function ChatPage() {
     }
   }, [characterId]);
 
-  const loading = messagesLoading || chatLoading;
+  const loading = status === "pending" || chatLoading;
 
   return (
     <div style={{ padding: 24, display: "grid", gap: 12 }}>
@@ -146,13 +126,13 @@ export default function ChatPage() {
 
       <MessageList
         messages={messages}
-        loading={messagesLoading}
-        loadingOlder={loadingOlder}
-        hasMore={hasMore}
+        status={status}
+        isFetchingNextPage={isFetchingNextPage}
+        hasNextPage={hasNextPage}
         error={error}
         listRef={listRef}
         onScroll={onScroll}
-        onLoadOlder={loadOlder}
+        onLoadOlder={fetchNextPage}
         onRetry={handleRetry}
       />
 
