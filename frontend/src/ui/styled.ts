@@ -18,6 +18,10 @@ export const Title = styled.h2`
   margin-bottom: 8px;
 `;
 
+export const MutedText = styled.span`
+  color: var(--muted);
+`;
+
 export const Subtitle = styled.div`
   margin-bottom: 12px;
 `;

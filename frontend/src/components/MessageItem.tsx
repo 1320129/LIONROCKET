@@ -1,5 +1,10 @@
 import React from "react";
-import { MessageContainer, MessageMeta, RetryButton } from "../ui/styled";
+import {
+  MessageContainer,
+  MessageMeta,
+  RetryButton,
+  MutedText,
+} from "../ui/styled";
 import { formatMessageTime } from "../utils/chatUtils";
 import { MessageWithStatus } from "../types/message";
 
@@ -19,14 +24,14 @@ export function MessageItem({ message, onRetry }: MessageItemProps) {
         {role === "user" && status === "failed" && (
           <>
             {" "}
-            <span className="muted">({error || "실패"})</span>{" "}
+            <MutedText>({error || "실패"})</MutedText>{" "}
             {onRetry && (
               <RetryButton onClick={() => onRetry(id)}>재전송</RetryButton>
             )}
           </>
         )}
         {role === "user" && status === "pending" && (
-          <span className="muted"> (전송 중)</span>
+          <MutedText> (전송 중)</MutedText>
         )}
       </div>
     </MessageContainer>

@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 
-import { API_BASE } from "./lib/config";
 import { getChannel, readTheme, saveTheme } from "./lib/persist";
 import { api } from "./lib/api";
 
@@ -13,7 +12,7 @@ import ChatPage from "./pages/ChatPage";
 
 import { theme as appTheme } from "./ui/theme";
 import { GlobalStyle } from "./ui/GlobalStyle";
-import { Container, PageHeader, Button as Btn } from "./ui/primitives";
+import { Container, PageHeader, Button as Btn, Row } from "./ui/primitives";
 import { DialogProvider } from "./ui/Dialog";
 import { AuthLoading, AppTitle } from "./ui/styled";
 
@@ -82,7 +81,7 @@ export default function App() {
             <Container>
               <PageHeader>
                 <AppTitle>AI Chat</AppTitle>
-                <div className="row">
+                <Row>
                   <Btn
                     onClick={() =>
                       setColorMode(colorMode === "dark" ? "light" : "dark")
@@ -90,7 +89,7 @@ export default function App() {
                   >
                     {colorMode === "dark" ? "라이트" : "다크"} 모드
                   </Btn>
-                </div>
+                </Row>
               </PageHeader>
             </Container>
             <Routes>
