@@ -8,15 +8,7 @@ import {
   FlexContainer,
   MutedText,
 } from "../styles/styled";
-
-type Character = {
-  id: number;
-  owner_user_id: number | null;
-  name: string;
-  prompt: string;
-  thumbnail_path: string | null;
-  created_at: number;
-};
+import { Character } from "../types/character";
 
 type CharacterCardProps = {
   character: Character;
@@ -25,7 +17,12 @@ type CharacterCardProps = {
   onDelete: (id: number) => void;
 };
 
-export function CharacterCard({ character, apiBase, onChat, onDelete }: CharacterCardProps) {
+export function CharacterCard({
+  character,
+  apiBase,
+  onChat,
+  onDelete,
+}: CharacterCardProps) {
   return (
     <Card>
       <CharacterCardStyled>

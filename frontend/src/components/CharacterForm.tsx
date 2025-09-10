@@ -10,15 +10,7 @@ import {
   PreviewImage,
   ErrorText,
 } from "../styles/styled";
-
-type Character = {
-  id: number;
-  owner_user_id: number | null;
-  name: string;
-  prompt: string;
-  thumbnail_path: string | null;
-  created_at: number;
-};
+import { Character } from "../types/character";
 
 type CharacterFormProps = {
   onSuccess?: () => void;
@@ -132,7 +124,11 @@ export function CharacterForm({ onSuccess }: CharacterFormProps) {
         </ImagePreview>
       )}
       {fileError && <ErrorText>{fileError}</ErrorText>}
-      <Button type="submit" variant="primary" disabled={createCharacterMutation.isPending}>
+      <Button
+        type="submit"
+        variant="primary"
+        disabled={createCharacterMutation.isPending}
+      >
         {createCharacterMutation.isPending ? "생성 중..." : "생성"}
       </Button>
     </FormContainer>
