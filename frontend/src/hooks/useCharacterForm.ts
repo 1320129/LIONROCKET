@@ -23,7 +23,7 @@ const initialFormData: CharacterFormData = {
 /**
  * 캐릭터 생성 폼 관리 훅
  * React Query를 사용하여 폼 상태를 관리하고 캐릭터 생성 API를 호출합니다.
- * 
+ *
  * @param onSuccess 캐릭터 생성 성공 시 호출될 콜백 함수
  * @returns 폼 데이터, 핸들러 함수들, 로딩 상태 등
  */

@@ -3,10 +3,24 @@ import { apiWithRetry } from "../lib/api";
 import { useDialog } from "./useDialog";
 import { MessageWithStatus } from "../types/message";
 
+/**
+ * 채팅 기능 관리 훅
+ * 메시지 전송 및 재전송 기능을 제공합니다.
+ *
+ * @param characterId 현재 캐릭터 ID
+ * @returns 로딩 상태, 메시지 전송, 재전송 함수
+ */
 export function useChat(characterId: number) {
   const [loading, setLoading] = useState(false);
   const dialog = useDialog();
 
+  /**
+   * 메시지 전송
+   * 사용자 메시지를 서버에 전송하고 AI 응답을 받습니다.
+   * @param content 전송할 메시지 내용
+   * @param onSuccess 성공 시 호출될 콜백 함수
+   * @param onError 실패 시 호출될 콜백 함수
+   */
   const sendMessage = async (
     content: string,
     onSuccess: (
@@ -60,6 +74,14 @@ export function useChat(characterId: number) {
     }
   };
 
+  /**
+   * 메시지 재전송
+   * 실패한 메시지를 다시 전송합니다.
+   * @param messageId 재전송할 메시지 ID
+   * @param content 재전송할 메시지 내용
+   * @param onSuccess 성공 시 호출될 콜백 함수
+   * @param onError 실패 시 호출될 콜백 함수
+   */
   const retryMessage = async (
     messageId: number,
     content: string,

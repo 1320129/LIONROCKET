@@ -6,6 +6,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useCharacterActions } from "../hooks/useCharacterActions";
 import { CharacterForm } from "../components/CharacterForm";
 import { CharacterList } from "../components/CharacterList";
+import { Character } from "../types/character";
 
 import { Button, Grid, SectionTitle } from "../styles/primitives";
 import {
@@ -17,15 +18,6 @@ import {
   GridContainer,
   GridWithMargin,
 } from "../styles/styled";
-
-type Character = {
-  id: number;
-  owner_user_id: number | null;
-  name: string;
-  prompt: string;
-  thumbnail_path: string | null;
-  created_at: number;
-};
 
 export default function HomePage() {
   const { me, isLoading: authLoading, error: authError, logout } = useAuth();
