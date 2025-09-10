@@ -42,7 +42,7 @@ export function getDb(): Database.Database {
     `CREATE TABLE IF NOT EXISTS messages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       character_id INTEGER NOT NULL,
-      user_id INTEGER NOT NULL,
+      user_id INTEGER NULL,
       role TEXT NOT NULL CHECK (role IN ('user','assistant')),
       content TEXT NOT NULL,
       created_at INTEGER NOT NULL,

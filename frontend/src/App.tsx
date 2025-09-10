@@ -50,10 +50,44 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
     staleTime: 60 * 1000, // 60초간 캐시 유지
   });
 
+  // 인증 상태가 변경될 때 모든 캐시 무효화
+  useEffect(() => {
+    if (data === true) {
+      // 로그인 성공 시 모든 캐시 무효화
+      queryClient.clear();
+
+      // localStorage에서 모든 캐시 제거
+      try {
+        const keys = Object.keys(localStorage);
+        keys.forEach((key) => {
+          if (key.startsWith("characterName:") || key.startsWith("draft:")) {
+            localStorage.removeItem(key);
+          }
+        });
+      } catch {
+        // localStorage 접근 실패 시 무시
+      }
+    }
+  }, [data, queryClient]);
+
   // 쿠키 변경 감지를 위한 이벤트 리스너
   useEffect(() => {
     const handleStorageChange = () => {
-      // 쿠키가 변경되었을 때 인증 상태 재검증
+      // 쿠키가 변경되었을 때 모든 캐시 완전 초기화
+      queryClient.clear();
+
+      // localStorage에서 모든 캐시 제거
+      try {
+        const keys = Object.keys(localStorage);
+        keys.forEach((key) => {
+          if (key.startsWith("characterName:") || key.startsWith("draft:")) {
+            localStorage.removeItem(key);
+          }
+        });
+      } catch {
+        // localStorage 접근 실패 시 무시
+      }
+
       queryClient.invalidateQueries({ queryKey: ["auth", "check"] });
     };
 

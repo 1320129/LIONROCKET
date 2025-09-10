@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { apiWithRetry } from "../lib/api";
+import { useAuth } from "./useAuth";
 
 /**
  * 캐릭터 정보 관리 훅
@@ -13,6 +14,10 @@ export function useCharacter(characterId: number) {
     `캐릭터 #${characterId}`
   );
   const [loading, setLoading] = useState(false);
+  const { me } = useAuth();
+
+  // 사용자별 캐시 키 생성
+  const userId = me?.id || "anonymous";
 
   useEffect(() => {
     /**
@@ -21,7 +26,8 @@ export function useCharacter(characterId: number) {
     const cachedName = (() => {
       try {
         return (
-          localStorage.getItem(`characterName:${characterId}`) || undefined
+          localStorage.getItem(`characterName:${characterId}:${userId}`) ||
+          undefined
         );
       } catch {
         return undefined;
@@ -44,7 +50,10 @@ export function useCharacter(characterId: number) {
         if (ch?.name) {
           setCharacterName(ch.name);
           try {
-            localStorage.setItem(`characterName:${characterId}`, ch.name);
+            localStorage.setItem(
+              `characterName:${characterId}:${userId}`,
+              ch.name
+            );
           } catch {
             // ignore localStorage errors
           }

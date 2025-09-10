@@ -13,7 +13,8 @@ const listQuery = z.object({
 
 router.get("/", requireAuth, (req, res) => {
   const parsed = listQuery.safeParse(req.query);
-  if (!parsed.success) return res.status(400).json({ error: "잘못된 요청입니다" });
+  if (!parsed.success)
+    return res.status(400).json({ error: "잘못된 요청입니다" });
   const { characterId, limit, before } = parsed.data;
   const userId = (req as any).user.userId as number;
   const db = getDb();
@@ -29,14 +30,14 @@ router.get("/", requireAuth, (req, res) => {
   const rows = before
     ? db
         .prepare(
-          "SELECT id, role, content, created_at FROM messages WHERE character_id = ? AND user_id = ? AND created_at < ? ORDER BY created_at DESC LIMIT ?"
+          "SELECT id, role, content, created_at FROM messages WHERE character_id = ? AND created_at < ? ORDER BY created_at DESC LIMIT ?"
         )
-        .all(characterId, userId, before, limit)
+        .all(characterId, before, limit)
     : db
         .prepare(
-          "SELECT id, role, content, created_at FROM messages WHERE character_id = ? AND user_id = ? ORDER BY created_at DESC LIMIT ?"
+          "SELECT id, role, content, created_at FROM messages WHERE character_id = ? ORDER BY created_at DESC LIMIT ?"
         )
-        .all(characterId, userId, limit);
+        .all(characterId, limit);
 
   // Return ascending order for UI
   const asc = (rows as any[]).reverse();

@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
 import { api } from "../lib/api";
@@ -12,6 +12,7 @@ import { broadcastLogout } from "../lib/persist";
  */
 export function useAuth() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // 현재 사용자 정보 조회
   const {
@@ -29,6 +30,21 @@ export function useAuth() {
       return api("/auth/logout", { method: "POST" });
     },
     onSuccess: () => {
+      // 모든 캐시를 완전히 초기화
+      queryClient.clear(); // 모든 React Query 캐시 제거
+
+      // localStorage에서 모든 캐시 제거
+      try {
+        const keys = Object.keys(localStorage);
+        keys.forEach((key) => {
+          if (key.startsWith("characterName:") || key.startsWith("draft:")) {
+            localStorage.removeItem(key);
+          }
+        });
+      } catch {
+        // localStorage 접근 실패 시 무시
+      }
+
       broadcastLogout();
       navigate("/login", { replace: true });
     },

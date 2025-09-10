@@ -19,7 +19,7 @@ export function MessageItem({ message, onRetry }: MessageItemProps) {
     <MessageContainer>
       <MessageMeta>{formatMessageTime(created_at)}</MessageMeta>
       <div>
-        <b>{role === "user" ? "나" : "AI"}</b>: {content}
+        <b>{role === "user" ? "사용자" : "AI"}</b>: {content}
         {role === "user" && status === "failed" && (
           <>
             {" "}

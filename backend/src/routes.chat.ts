@@ -13,7 +13,8 @@ const bodySchema = z.object({
 
 router.post("/", requireAuth, async (req, res) => {
   const parsed = bodySchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "잘못된 입력입니다" });
+  if (!parsed.success)
+    return res.status(400).json({ error: "잘못된 입력입니다" });
   const { characterId, message } = parsed.data;
 
   const user = (req as any).user as { userId: number; email: string };
@@ -30,21 +31,26 @@ router.post("/", requireAuth, async (req, res) => {
       .get(characterId, userId) as
       | { id: number; owner_user_id: number | null; prompt: string }
       | undefined;
-    if (!ch) return res.status(404).json({ error: "캐릭터를 찾을 수 없습니다" });
+    if (!ch)
+      return res.status(404).json({ error: "캐릭터를 찾을 수 없습니다" });
     systemPrompt = ch.prompt;
   }
 
   const createdAt = Date.now();
   const insertedUserMsg = db
     .prepare(
-      "INSERT INTO messages (character_id, user_id, role, content, created_at) VALUES (?, ?, 'user', ?, ?)"
+      "INSERT INTO messages (character_id, user_id, role, content, created_at) VALUES (?, NULL, 'user', ?, ?)"
     )
-    .run(characterId ?? null, userId, message, createdAt);
+    .run(characterId ?? null, message, createdAt);
 
   try {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey)
-      return res.status(500).json({ error: "서버 환경변수 ANTHROPIC_API_KEY가 설정되지 않았습니다" });
+      return res
+        .status(500)
+        .json({
+          error: "서버 환경변수 ANTHROPIC_API_KEY가 설정되지 않았습니다",
+        });
 
     const model = parsed.data.model || "claude-3-5-sonnet-20240620";
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -80,12 +86,14 @@ router.post("/", requireAuth, async (req, res) => {
 
     const createdAtAssistant = Date.now();
     db.prepare(
-      "INSERT INTO messages (character_id, user_id, role, content, created_at) VALUES (?, ?, 'assistant', ?, ?)"
-    ).run(characterId ?? null, userId, reply, createdAtAssistant);
+      "INSERT INTO messages (character_id, user_id, role, content, created_at) VALUES (?, NULL, 'assistant', ?, ?)"
+    ).run(characterId ?? null, reply, createdAtAssistant);
 
     return res.json({ reply, createdAt: createdAtAssistant });
   } catch (e: any) {
-    return res.status(500).json({ error: e?.message || "채팅 처리에 실패했습니다" });
+    return res
+      .status(500)
+      .json({ error: e?.message || "채팅 처리에 실패했습니다" });
   }
 });
 

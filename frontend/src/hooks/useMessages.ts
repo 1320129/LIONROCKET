@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query";
 import { apiWithRetry } from "../lib/api";
 import { MessageWithStatus } from "../types/message";
+import { useAuth } from "./useAuth";
 
 const LIMIT = 30;
 
@@ -21,6 +22,11 @@ export function useMessages(characterId: number) {
   const queryClient = useQueryClient();
   const listRef = useRef<HTMLDivElement | null>(null);
   const stickToBottomRef = useRef(true);
+  const { me } = useAuth();
+
+  // 사용자별 캐시 키 생성
+  const userId = me?.id || "anonymous";
+  const cacheKey = ["messages", characterId, userId];
 
   // 무한 스크롤 쿼리
   const {
@@ -31,7 +37,7 @@ export function useMessages(characterId: number) {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery<MessageWithStatus[]>({
-    queryKey: ["messages", characterId],
+    queryKey: cacheKey,
     queryFn: ({ pageParam }) =>
       apiWithRetry<MessageWithStatus[]>(
         `/messages?characterId=${characterId}&limit=${LIMIT}` +
@@ -51,7 +57,7 @@ export function useMessages(characterId: number) {
    */
   const addMessage = (message: MessageWithStatus) => {
     queryClient.setQueryData(
-      ["messages", characterId],
+      cacheKey,
       (oldData: InfiniteData<MessageWithStatus[]> | undefined) => {
         if (!oldData) {
           return { pages: [[message]], pageParams: [undefined] };
@@ -72,7 +78,7 @@ export function useMessages(characterId: number) {
    */
   const updateMessage = (id: number, updates: Partial<MessageWithStatus>) => {
     queryClient.setQueryData(
-      ["messages", characterId],
+      cacheKey,
       (oldData: InfiniteData<MessageWithStatus[]> | undefined) => {
         if (!oldData) return oldData;
         return {
