@@ -5,7 +5,7 @@ React + TypeScript + Express.js로 구현된 AI 캐릭터 채팅 서비스입니
 ## 📋 프로젝트 개요
 
 - **프론트엔드**: React 19 + TypeScript + Vite + styled-components
-- **백엔드**: Express.js + TypeScript + SQLite (better-sqlite3)
+- **백엔드**: Express.js + TypeScript + SQLite
 - **상태 관리**: @tanstack/react-query + React Hooks
 - **스타일링**: styled-components + 다크모드 지원
 
