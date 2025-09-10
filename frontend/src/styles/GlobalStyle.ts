@@ -38,6 +38,15 @@ export const GlobalStyle = createGlobalStyle`
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
+    min-height: 100vh;
+  }
+
+  .theme-light body {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  }
+
+  .theme-dark body {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   }
 
   a {

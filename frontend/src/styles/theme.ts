@@ -14,13 +14,21 @@ export const theme: DefaultTheme = {
     danger: "#ef4444",
     dangerHover: "#dc2626",
     success: "#10b981",
+    gradient: {
+      primary: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
+      secondary: "linear-gradient(135deg, #f3f4f6, #e5e7eb)",
+    },
   },
   radius: {
-    sm: "6px",
-    md: "8px",
-    lg: "12px",
+    sm: "8px",
+    md: "12px",
+    lg: "16px",
   },
-  shadow: "0 1px 2px rgba(0,0,0,0.06)",
+  shadow: {
+    sm: "0 1px 2px rgba(0,0,0,0.06)",
+    md: "0 4px 12px rgba(0,0,0,0.1)",
+    lg: "0 8px 32px rgba(0,0,0,0.1)",
+  },
 };
 
 // Minimal declaration merge for theme typing
@@ -39,12 +47,20 @@ declare module "styled-components" {
       danger: string;
       dangerHover: string;
       success: string;
+      gradient: {
+        primary: string;
+        secondary: string;
+      };
     };
     radius: {
       sm: string;
       md: string;
       lg: string;
     };
-    shadow: string;
+    shadow: {
+      sm: string;
+      md: string;
+      lg: string;
+    };
   }
 }

@@ -38,11 +38,6 @@ export const GridWithMargin = styled.div`
   margin-top: 24px;
 `;
 
-export const LoginFormGrid = styled.div`
-  display: grid;
-  gap: 8px;
-`;
-
 export const ChatHeaderRow = styled.div`
   display: flex;
   justify-content: space-between;
@@ -169,20 +164,93 @@ export const ChatInput = styled.input`
 `;
 
 export const LoginContainer = styled.div`
-  max-width: 360px;
-  margin: 80px auto;
-  padding: 16px;
+  max-width: 400px;
+  margin: 60px auto;
+  padding: 32px;
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
+`;
+
+export const LoginTitle = styled.h1`
+  text-align: center;
+  margin: 0 0 32px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 `;
 
 export const LoginForm = styled.form`
   display: grid;
-  gap: 8px;
+  gap: 20px;
 `;
 
 export const LoginActions = styled.div`
   display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+`;
+
+export const TabButton = styled.button<{ active?: boolean }>`
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: ${({ active }) => (active ? "var(--card)" : "transparent")};
+  color: ${({ active, theme }) =>
+    active ? theme.colors.primary : "var(--muted)"};
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: ${({ active }) =>
+    active ? "0 2px 4px rgba(0, 0, 0, 0.1)" : "none"};
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.primary};
+  }
+`;
+
+export const LoginFormGrid = styled.div`
+  display: grid;
+  gap: 16px;
+`;
+
+export const SubmitButton = styled.button`
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
 `;
 
 export const MessageListContainer = styled.div`

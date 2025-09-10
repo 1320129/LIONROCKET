@@ -7,11 +7,15 @@ import { LoginCredentials } from "../types/auth";
 
 import {
   LoginContainer,
+  LoginTitle,
   LoginForm,
   LoginActions,
-  ErrorText,
+  TabButton,
   LoginFormGrid,
+  SubmitButton,
+  ErrorText,
 } from "../styles/styled";
+import { Input } from "../styles/primitives";
 
 export default function LoginPage() {
   const nav = useNavigate();
@@ -44,33 +48,33 @@ export default function LoginPage() {
 
   return (
     <LoginContainer>
-      <h1>AI Chat 로그인</h1>
+      <LoginTitle>AI Chat</LoginTitle>
       <LoginForm onSubmit={onSubmit}>
         <LoginActions>
-          <button
+          <TabButton
             type="button"
             onClick={() => setMode("login")}
-            disabled={mode === "login"}
+            active={mode === "login"}
           >
             로그인
-          </button>
-          <button
+          </TabButton>
+          <TabButton
             type="button"
             onClick={() => setMode("register")}
-            disabled={mode === "register"}
+            active={mode === "register"}
           >
             회원가입
-          </button>
+          </TabButton>
         </LoginActions>
         <LoginFormGrid>
-          <input
+          <Input
             type="email"
             placeholder="이메일"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-          <input
+          <Input
             type="password"
             placeholder="비밀번호 (6자 이상)"
             value={password}
@@ -78,13 +82,13 @@ export default function LoginPage() {
             minLength={6}
             required
           />
-          <button type="submit" disabled={authMutation.isPending}>
+          <SubmitButton type="submit" disabled={authMutation.isPending}>
             {authMutation.isPending
               ? "처리중..."
               : mode === "login"
               ? "로그인"
               : "회원가입"}
-          </button>
+          </SubmitButton>
           {authMutation.error && (
             <ErrorText>{authMutation.error.message}</ErrorText>
           )}
