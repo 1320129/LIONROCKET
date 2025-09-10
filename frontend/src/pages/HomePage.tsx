@@ -33,6 +33,7 @@ import {
   ErrorText,
   FlexContainer,
   MutedText,
+  GridWithMargin,
 } from "../ui/styled";
 
 type Character = {
@@ -173,85 +174,87 @@ export default function HomePage() {
       <Subtitle>로그인: {me?.email}</Subtitle>
       <Button onClick={onLogout}>로그아웃</Button>
 
-      <Grid columns={2} style={{ marginTop: 24 }}>
-        <div>
-          <SectionTitle>캐릭터 생성</SectionTitle>
-          <FormContainer onSubmit={onCreateCharacter}>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="이름"
-              required
-            />
-            <Textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="프롬프트"
-              required
-            />
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-            />
-            {previewUrl && (
-              <ImagePreview>
-                <PreviewImage src={previewUrl} width={64} height={64} />
-                <Button type="button" onClick={() => setFile(null)}>
-                  이미지 제거
-                </Button>
-              </ImagePreview>
-            )}
-            {fileError && <ErrorText>{fileError}</ErrorText>}
-            <Button type="submit" variant="primary">
-              생성
-            </Button>
-          </FormContainer>
-        </div>
+      <GridWithMargin>
+        <Grid columns={2}>
+          <div>
+            <SectionTitle>캐릭터 생성</SectionTitle>
+            <FormContainer onSubmit={onCreateCharacter}>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="이름"
+                required
+              />
+              <Textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="프롬프트"
+                required
+              />
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+              />
+              {previewUrl && (
+                <ImagePreview>
+                  <PreviewImage src={previewUrl} width={64} height={64} />
+                  <Button type="button" onClick={() => setFile(null)}>
+                    이미지 제거
+                  </Button>
+                </ImagePreview>
+              )}
+              {fileError && <ErrorText>{fileError}</ErrorText>}
+              <Button type="submit" variant="primary">
+                생성
+              </Button>
+            </FormContainer>
+          </div>
 
-        <div>
-          <SectionTitle>캐릭터 목록</SectionTitle>
-          <GridContainer>
-            {characters.map((c) => (
-              <Card key={c.id}>
-                <CharacterCard>
-                  {c.thumbnail_path && (
-                    <ThumbnailImage
-                      src={`${API_BASE}/${c.thumbnail_path}`}
-                      alt={c.name}
-                      width={48}
-                      height={48}
-                      loading="lazy"
-                    />
-                  )}
-                  <CharacterInfo>
-                    <CharacterName>{c.name}</CharacterName>
-                    <CharacterMeta>
-                      <MutedText>{c.prompt.slice(0, 80)}</MutedText>
-                    </CharacterMeta>
-                  </CharacterInfo>
-                  <FlexContainer>
-                    <Button
-                      type="button"
-                      variant="primary"
-                      onClick={() => goChat(c)}
-                    >
-                      대화하기
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="danger"
-                      onClick={() => onDeleteCharacter(c.id)}
-                    >
-                      삭제
-                    </Button>
-                  </FlexContainer>
-                </CharacterCard>
-              </Card>
-            ))}
-          </GridContainer>
-        </div>
-      </Grid>
+          <div>
+            <SectionTitle>캐릭터 목록</SectionTitle>
+            <GridContainer>
+              {characters.map((c) => (
+                <Card key={c.id}>
+                  <CharacterCard>
+                    {c.thumbnail_path && (
+                      <ThumbnailImage
+                        src={`${API_BASE}/${c.thumbnail_path}`}
+                        alt={c.name}
+                        width={48}
+                        height={48}
+                        loading="lazy"
+                      />
+                    )}
+                    <CharacterInfo>
+                      <CharacterName>{c.name}</CharacterName>
+                      <CharacterMeta>
+                        <MutedText>{c.prompt.slice(0, 80)}</MutedText>
+                      </CharacterMeta>
+                    </CharacterInfo>
+                    <FlexContainer>
+                      <Button
+                        type="button"
+                        variant="primary"
+                        onClick={() => goChat(c)}
+                      >
+                        대화하기
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="danger"
+                        onClick={() => onDeleteCharacter(c.id)}
+                      >
+                        삭제
+                      </Button>
+                    </FlexContainer>
+                  </CharacterCard>
+                </Card>
+              ))}
+            </GridContainer>
+          </div>
+        </Grid>
+      </GridWithMargin>
     </PageContainer>
   );
 }

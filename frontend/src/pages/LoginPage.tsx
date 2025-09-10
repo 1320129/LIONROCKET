@@ -9,6 +9,7 @@ import {
   LoginForm,
   LoginActions,
   ErrorText,
+  LoginFormGrid,
 } from "../ui/styled";
 
 export default function LoginPage() {
@@ -65,7 +66,7 @@ export default function LoginPage() {
             회원가입
           </button>
         </LoginActions>
-        <div style={{ display: "grid", gap: 8 }}>
+        <LoginFormGrid>
           <input
             type="email"
             placeholder="이메일"
@@ -91,7 +92,7 @@ export default function LoginPage() {
           {authMutation.error && (
             <ErrorText>{authMutation.error.message}</ErrorText>
           )}
-        </div>
+        </LoginFormGrid>
       </LoginForm>
     </LoginContainer>
   );

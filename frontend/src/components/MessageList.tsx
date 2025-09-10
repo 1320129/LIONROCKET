@@ -1,7 +1,7 @@
 import React from "react";
 import { Button, Card, EmptyState } from "../ui/primitives";
 import { MessageItem } from "./MessageItem";
-import { LoadMoreButton, ErrorText } from "../ui/styled";
+import { LoadMoreButton, ErrorText, MessageListCard } from "../ui/styled";
 import { MessageWithStatus } from "../types/message";
 
 type MessageListProps = {
@@ -14,7 +14,7 @@ type MessageListProps = {
   onScroll: (e: React.UIEvent<HTMLDivElement>) => void;
   onLoadOlder: () => void;
   onRetry: (messageId: number) => void;
-}
+};
 
 export function MessageList({
   messages,
@@ -28,18 +28,7 @@ export function MessageList({
   onRetry,
 }: MessageListProps) {
   return (
-    <Card
-      ref={listRef}
-      onScroll={onScroll}
-      style={{
-        padding: 12,
-        minHeight: 300,
-        maxHeight: 480,
-        overflowY: "auto",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <MessageListCard ref={listRef} onScroll={onScroll}>
       {hasNextPage && (
         <LoadMoreButton>
           <Button onClick={onLoadOlder} disabled={isFetchingNextPage}>
@@ -65,6 +54,6 @@ export function MessageList({
       ))}
 
       {error && <ErrorText>{String(error)}</ErrorText>}
-    </Card>
+    </MessageListCard>
   );
 }

@@ -22,6 +22,31 @@ export const MutedText = styled.span`
   color: var(--muted);
 `;
 
+// 인라인 스타일 대체용 컴포넌트들
+export const MessageListCard = styled.div`
+  padding: 12px;
+  min-height: 300px;
+  max-height: 480px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+`;
+
+export const GridWithMargin = styled.div`
+  margin-top: 24px;
+`;
+
+export const LoginFormGrid = styled.div`
+  display: grid;
+  gap: 8px;
+`;
+
+export const ChatHeaderRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
 export const Subtitle = styled.div`
   margin-bottom: 12px;
 `;
@@ -37,7 +62,11 @@ export const GridContainer = styled.div`
   gap: 12px;
 `;
 
-export const FlexContainer = styled.div<{ gap?: number; alignItems?: string; justifyContent?: string }>`
+export const FlexContainer = styled.div<{
+  gap?: number;
+  alignItems?: string;
+  justifyContent?: string;
+}>`
   display: flex;
   gap: ${({ gap = 8 }) => gap}px;
   align-items: ${({ alignItems = "center" }) => alignItems};
