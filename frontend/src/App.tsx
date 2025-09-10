@@ -59,57 +59,59 @@ export default function App() {
   React.useEffect(() => {
     const ch = getChannel();
     if (!ch) return;
-    const onMessage = (ev: MessageEvent<any>) => {
+    const onMessage = (
+      ev: MessageEvent<{ type?: string; value?: "light" | "dark" }>
+    ) => {
       if (ev.data?.type === "theme") setColorMode(ev.data.value);
     };
-    ch.addEventListener("message", onMessage as any);
-    return () => ch.removeEventListener("message", onMessage as any);
+    ch.addEventListener("message", onMessage);
+    return () => ch.removeEventListener("message", onMessage);
   }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={appTheme}>
         <GlobalStyle />
         <DialogProvider>
-        <BrowserRouter>
-        <Container>
-          <PageHeader>
-            <div style={{ fontWeight: 700 }}>AI Chat</div>
-            <div className="row">
-              <Btn
-                onClick={() =>
-                  setColorMode(colorMode === "dark" ? "light" : "dark")
+          <BrowserRouter>
+            <Container>
+              <PageHeader>
+                <div style={{ fontWeight: 700 }}>AI Chat</div>
+                <div className="row">
+                  <Btn
+                    onClick={() =>
+                      setColorMode(colorMode === "dark" ? "light" : "dark")
+                    }
+                  >
+                    {colorMode === "dark" ? "라이트" : "다크"} 모드
+                  </Btn>
+                </div>
+              </PageHeader>
+            </Container>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route
+                path="/"
+                element={
+                  <RequireAuth>
+                    <Container>
+                      <HomePage />
+                    </Container>
+                  </RequireAuth>
                 }
-              >
-                {colorMode === "dark" ? "라이트" : "다크"} 모드
-              </Btn>
-            </div>
-          </PageHeader>
-        </Container>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route
-            path="/"
-            element={
-              <RequireAuth>
-                <Container>
-                  <HomePage />
-                </Container>
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/chat/:id"
-            element={
-              <RequireAuth>
-                <Container>
-                  <ChatPage />
-                </Container>
-              </RequireAuth>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-        </BrowserRouter>
+              />
+              <Route
+                path="/chat/:id"
+                element={
+                  <RequireAuth>
+                    <Container>
+                      <ChatPage />
+                    </Container>
+                  </RequireAuth>
+                }
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
         </DialogProvider>
       </ThemeProvider>
     </QueryClientProvider>

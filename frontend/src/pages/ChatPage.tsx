@@ -30,12 +30,12 @@ export default function ChatPage() {
   const { characterName } = useCharacter(characterId);
   const {
     messages,
-    status,
+    loading: messagesLoading,
     error,
     listRef,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
+    loadOlder,
+    hasMore,
+    loadingOlder,
     addMessage,
     updateMessage,
     onScroll,
@@ -115,7 +115,7 @@ export default function ChatPage() {
     }
   }, [characterId]);
 
-  const loading = status === "pending" || chatLoading;
+  const loading = messagesLoading || chatLoading;
 
   return (
     <div style={{ padding: 24, display: "grid", gap: 12 }}>
@@ -126,13 +126,13 @@ export default function ChatPage() {
 
       <MessageList
         messages={messages}
-        status={status}
-        isFetchingNextPage={isFetchingNextPage}
-        hasNextPage={hasNextPage}
+        loading={messagesLoading}
+        isFetchingNextPage={loadingOlder}
+        hasNextPage={hasMore}
         error={error}
         listRef={listRef}
         onScroll={onScroll}
-        onLoadOlder={fetchNextPage}
+        onLoadOlder={loadOlder}
         onRetry={handleRetry}
       />
 

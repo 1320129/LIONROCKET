@@ -13,7 +13,7 @@ type MessageWithStatus = {
 
 interface MessageListProps {
   messages: MessageWithStatus[];
-  status: "pending" | "error" | "success";
+  loading: boolean;
   isFetchingNextPage: boolean;
   hasNextPage?: boolean;
   error: unknown;
@@ -25,7 +25,7 @@ interface MessageListProps {
 
 export function MessageList({
   messages,
-  status,
+  loading,
   isFetchingNextPage,
   hasNextPage,
   error,
@@ -55,11 +55,11 @@ export function MessageList({
         </div>
       )}
 
-      {status === "pending" && messages.length === 0 && (
+      {loading && messages.length === 0 && (
         <EmptyState>대화를 불러오고 있습니다...</EmptyState>
       )}
 
-      {status === "success" && messages.length === 0 && (
+      {!loading && messages.length === 0 && (
         <EmptyState>대화를 시작해보세요!</EmptyState>
       )}
 

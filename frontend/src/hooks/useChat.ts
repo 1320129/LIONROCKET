@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { apiWithRetry } from "../lib/api";
-import { useDialog } from "../ui/Dialog";
+import { useDialog } from "../ui/useDialog";
 
 type MessageWithStatus = {
   id: number;
