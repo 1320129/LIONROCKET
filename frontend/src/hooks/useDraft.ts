@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
+import React from "react";
 import { readDraft, saveDraft } from "../lib/persist";
 
 export function useDraft(characterId: number) {
-  const [input, setInput] = useState("");
+  const [input, setInput] = React.useState("");
 
-  useEffect(() => {
+  React.useEffect(() => {
     setInput(readDraft(characterId));
   }, [characterId]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     saveDraft(characterId, input);
   }, [characterId, input]);
 
