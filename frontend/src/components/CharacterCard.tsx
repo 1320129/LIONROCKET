@@ -17,7 +17,12 @@ type CharacterCardProps = {
   onDelete: (id: number) => void;
 };
 
-export function CharacterCard({ character, apiBase, onChat, onDelete }: CharacterCardProps) {
+export function CharacterCard({
+  character,
+  apiBase,
+  onChat,
+  onDelete,
+}: CharacterCardProps) {
   return (
     <Card>
       <CharacterCardStyled>

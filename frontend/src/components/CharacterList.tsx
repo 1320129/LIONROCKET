@@ -8,7 +8,12 @@ type CharacterListProps = {
   onDelete: (id: number) => void;
 };
 
-export function CharacterList({ characters, apiBase, onChat, onDelete }: CharacterListProps) {
+export function CharacterList({
+  characters,
+  apiBase,
+  onChat,
+  onDelete,
+}: CharacterListProps) {
   if (characters.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "2rem", color: "#666" }}>
