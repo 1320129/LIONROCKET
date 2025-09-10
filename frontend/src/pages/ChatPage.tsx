@@ -15,7 +15,7 @@ import {
   redirectToLastCharacter,
 } from "../utils/chatUtils";
 
-import { ChatContainer, ChatHeader, ChatHeaderRow } from "../ui/styled";
+import { ChatContainer, ChatHeader, ChatHeaderRow } from "../styles/styled";
 import { MessageWithStatus } from "../types/message";
 
 export default function ChatPage() {

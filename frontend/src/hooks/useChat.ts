@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { apiWithRetry } from "../lib/api";
-import { useDialog } from "../ui/useDialog";
+import { useDialog } from "./useDialog";
 import { MessageWithStatus } from "../types/message";
 
 export function useChat(characterId: number) {

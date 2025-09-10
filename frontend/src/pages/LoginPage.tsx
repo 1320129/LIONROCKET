@@ -10,7 +10,7 @@ import {
   LoginActions,
   ErrorText,
   LoginFormGrid,
-} from "../ui/styled";
+} from "../styles/styled";
 
 export default function LoginPage() {
   const nav = useNavigate();

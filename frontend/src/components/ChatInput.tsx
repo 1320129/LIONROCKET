@@ -1,6 +1,6 @@
 import React from "react";
-import { Button } from "../ui/primitives";
-import { ChatForm, ChatInput as StyledChatInput } from "../ui/styled";
+import { Button } from "../styles/primitives";
+import { ChatForm, ChatInput as StyledChatInput } from "../styles/styled";
 
 type ChatInputProps = {
   input: string;

@@ -13,8 +13,8 @@ import {
   Textarea,
   Grid,
   SectionTitle,
-} from "../ui/primitives";
-import { useDialog } from "../ui/useDialog";
+} from "../styles/primitives";
+import { useDialog } from "../hooks/useDialog";
 import {
   LoadingContainer,
   ErrorContainer,
@@ -34,7 +34,7 @@ import {
   FlexContainer,
   MutedText,
   GridWithMargin,
-} from "../ui/styled";
+} from "../styles/styled";
 
 type Character = {
   id: number;
@@ -161,7 +161,9 @@ export default function HomePage() {
     saveLastCharacter(c.id);
     try {
       localStorage.setItem(`characterName:${c.id}`, c.name);
-    } catch {}
+    } catch {
+      // localStorage 접근 실패 시 무시
+    }
     navigate(`/chat/${c.id}`);
   }
 

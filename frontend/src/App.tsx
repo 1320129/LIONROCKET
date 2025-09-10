@@ -14,11 +14,11 @@ import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import ChatPage from "./pages/ChatPage";
 
-import { theme as appTheme } from "./ui/theme";
-import { GlobalStyle } from "./ui/GlobalStyle";
-import { Container, PageHeader, Button as Btn, Row } from "./ui/primitives";
-import { DialogProvider } from "./ui/Dialog";
-import { AuthLoading, AppTitle } from "./ui/styled";
+import { theme as appTheme } from "./styles/theme";
+import { GlobalStyle } from "./styles/GlobalStyle";
+import { Container, PageHeader, Button as Btn, Row } from "./styles/primitives";
+import { DialogProvider } from "./components/Dialog";
+import { AuthLoading, AppTitle } from "./styles/styled";
 
 // QueryClient 인스턴스 생성
 const queryClient = new QueryClient({

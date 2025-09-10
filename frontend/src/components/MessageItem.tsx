@@ -4,7 +4,7 @@ import {
   MessageMeta,
   RetryButton,
   MutedText,
-} from "../ui/styled";
+} from "../styles/styled";
 import { formatMessageTime } from "../utils/chatUtils";
 import { MessageWithStatus } from "../types/message";
 

@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from "react";
 import styled from "styled-components";
-import { Button, Card } from "./primitives";
-import { DialogContext } from "./useDialog";
-import { DialogTitle, DialogMessage, DialogActions } from "./styled";
+import { Button, Card } from "../styles/primitives";
+import { DialogTitle, DialogMessage, DialogActions } from "../styles/styled";
+import { DialogAPI, DialogContext } from "../hooks/DialogContext";
 
 const Backdrop = styled.div`
   position: fixed;
@@ -30,24 +30,12 @@ type DialogState = {
   showCancel?: boolean;
 };
 
-type DialogContextValue = {
-  alert: (msg: string | React.ReactNode, title?: string) => Promise<void>;
-  confirm: (
-    msg: string | React.ReactNode,
-    title?: string,
-    okText?: string,
-    cancelText?: string
-  ) => Promise<boolean>;
-};
-
 export function DialogProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<DialogState>({ open: false });
 
-  function close() {
-    setState({ open: false });
-  }
+  const close = () => setState({ open: false });
 
-  const api = useMemo<DialogContextValue>(
+  const api = useMemo<DialogAPI>(
     () => ({
       alert(msg, title) {
         return new Promise<void>((resolve) => {
