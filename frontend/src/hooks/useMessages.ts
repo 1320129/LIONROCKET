@@ -1,117 +1,58 @@
-import { useState, useEffect, useRef } from "react";
-import { apiWithRetry } from "../lib/api";
-
-type Message = {
-  id: number;
-  role: "user" | "assistant";
-  content: string;
-  created_at: number;
-};
-
-type MessageWithStatus = Message & {
-  status?: "pending" | "failed" | "sent";
-  error?: string;
-};
+import { useEffect, useCallback } from "react";
+import { useMessagesState } from "./useMessagesState";
+import { useMessagesActions } from "./useMessagesActions";
+import { useMessagesScroll } from "./useMessagesScroll";
 
 export function useMessages(characterId: number) {
-  const [messages, setMessages] = useState<MessageWithStatus[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingOlder, setLoadingOlder] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const listRef = useRef<HTMLDivElement | null>(null);
-  const stickToBottomRef = useRef(true);
+  // 상태 관리
+  const state = useMessagesState();
+  
+  // 액션 관리
+  const actions = useMessagesActions(characterId, state);
+  
+  // 스크롤 관리
+  const scroll = useMessagesScroll();
 
-  const loadMessages = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const limit = 30;
-      const list = await apiWithRetry<MessageWithStatus[]>(
-        `/messages?characterId=${characterId}&limit=${limit}`
-      );
-      setMessages(list);
-      setHasMore(list.length === limit);
-      // After initial load, scroll to bottom
-      requestAnimationFrame(() => {
-        const el = listRef.current;
-        if (el) el.scrollTop = el.scrollHeight;
-      });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadOlder = async () => {
-    if (loadingOlder || !hasMore || messages.length === 0) return;
-    setLoadingOlder(true);
-    try {
-      const limit = 30;
-      const oldest = messages[0]?.created_at;
-      const older = await apiWithRetry<MessageWithStatus[]>(
-        `/messages?characterId=${characterId}&limit=${limit}&before=${oldest}`
-      );
-      setMessages((prev) => [...older, ...prev]);
-      setHasMore(older.length === limit);
-      // keep scroll position roughly stable
-      requestAnimationFrame(() => {
-        const el = listRef.current;
-        if (el) el.scrollTop = 1; // nudge to avoid re-trigger at exact 0
-      });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
-    } finally {
-      setLoadingOlder(false);
-    }
-  };
-
-  const addMessage = (message: MessageWithStatus) => {
-    setMessages((prev) => [...prev, message]);
-  };
-
-  const updateMessage = (id: number, updates: Partial<MessageWithStatus>) => {
-    setMessages((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, ...updates } : m))
-    );
-  };
-
-  const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
+  // 스크롤 이벤트 핸들러 (loadOlder와 스크롤 추적을 결합)
+  const onScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const el = e.currentTarget;
     if (el.scrollTop <= 0) {
-      void loadOlder();
+      void actions.loadOlder();
     }
-    // track whether user is near bottom (within 24px)
-    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
-    stickToBottomRef.current = nearBottom;
-  };
+    scroll.onScroll(e);
+  }, [actions.loadOlder, scroll.onScroll]);
 
-  const scrollToBottom = () => {
-    requestAnimationFrame(() => {
-      const el = listRef.current;
-      if (el && stickToBottomRef.current) el.scrollTop = el.scrollHeight;
-    });
-  };
-
+  // 초기 메시지 로드
   useEffect(() => {
-    void loadMessages();
-  }, [characterId]);
+    void actions.loadMessages();
+  }, [characterId, actions.loadMessages]);
+
+  // 초기 로드 후 스크롤을 맨 아래로
+  useEffect(() => {
+    if (!state.loading && state.messages.length > 0) {
+      scroll.scrollToInitialBottom();
+    }
+  }, [state.loading, state.messages.length, scroll.scrollToInitialBottom]);
 
   return {
-    messages,
-    loading,
-    loadingOlder,
-    hasMore,
-    error,
-    listRef,
-    loadOlder,
-    addMessage,
-    updateMessage,
+    // 상태
+    messages: state.messages,
+    loading: state.loading,
+    loadingOlder: state.loadingOlder,
+    hasMore: state.hasMore,
+    error: state.error,
+    
+    // 스크롤 관련
+    listRef: scroll.listRef,
     onScroll,
-    scrollToBottom,
-    setError,
+    scrollToBottom: scroll.scrollToBottom,
+    
+    // 액션들
+    loadOlder: actions.loadOlder,
+    addMessage: actions.addMessage,
+    updateMessage: actions.updateMessage,
+    setError: state.setError,
   };
 }
+
+export type { MessageWithStatus } from "./useMessagesState";
