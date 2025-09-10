@@ -1,5 +1,4 @@
 import React from "react";
-import { Button } from "../ui/primitives";
 import { MessageContainer, MessageMeta, RetryButton } from "../ui/styled";
 import { formatMessageTime } from "../utils/chatUtils";
 
@@ -12,7 +11,7 @@ type MessageWithStatus = {
   error?: string;
 };
 
-interface MessageItemProps {
+type MessageItemProps = {
   message: MessageWithStatus;
   onRetry?: (messageId: number) => void;
 }

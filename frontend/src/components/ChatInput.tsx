@@ -2,7 +2,7 @@ import React from "react";
 import { Button, Input, Row } from "../ui/primitives";
 import { ChatForm, ChatInput as StyledChatInput } from "../ui/styled";
 
-interface ChatInputProps {
+type ChatInputProps = {
   input: string;
   loading: boolean;
   onInputChange: (value: string) => void;

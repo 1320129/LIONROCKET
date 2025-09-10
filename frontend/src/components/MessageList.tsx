@@ -12,7 +12,7 @@ type MessageWithStatus = {
   error?: string;
 };
 
-interface MessageListProps {
+type MessageListProps = {
   messages: MessageWithStatus[];
   loading: boolean;
   isFetchingNextPage: boolean;

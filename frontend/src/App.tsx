@@ -2,15 +2,18 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+
+import { API_BASE } from "./lib/config";
+import { getChannel, readTheme, saveTheme } from "./lib/persist";
+
+import LoginPage from "./pages/LoginPage";
+import HomePage from "./pages/HomePage";
+import ChatPage from "./pages/ChatPage";
+
 import { theme as appTheme } from "./ui/theme";
 import { GlobalStyle } from "./ui/GlobalStyle";
 import { Container, PageHeader, Button as Btn } from "./ui/primitives";
 import { DialogProvider } from "./ui/Dialog";
-import LoginPage from "./pages/LoginPage";
-import HomePage from "./pages/HomePage";
-import { API_BASE } from "./lib/config";
-import { getChannel, readTheme, saveTheme } from "./lib/persist";
-import ChatPage from "./pages/ChatPage";
 import { AuthLoading, AppTitle } from "./ui/styled";
 
 // QueryClient 인스턴스 생성

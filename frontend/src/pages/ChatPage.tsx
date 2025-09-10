@@ -1,17 +1,21 @@
 import React, { useCallback, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Row } from "../ui/primitives";
+
 import { useCharacter } from "../hooks/useCharacter";
 import { useMessages } from "../hooks/useMessages";
 import { useChat } from "../hooks/useChat";
 import { useDraft } from "../hooks/useDraft";
 import { useBroadcastChannel } from "../hooks/useBroadcastChannel";
+
 import { MessageList } from "../components/MessageList";
 import { ChatInput } from "../components/ChatInput";
+
 import {
   validateCharacterId,
   redirectToLastCharacter,
 } from "../utils/chatUtils";
+
+import { Row } from "../ui/primitives";
 import { ChatContainer, ChatHeader } from "../ui/styled";
 
 type MessageWithStatus = {
