@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Button, EmptyState } from "../styles/primitives";
 import { MessageItem } from "./MessageItem";
 import { LoadMoreButton, ErrorText, MessageListCard } from "../styles/styled";
@@ -15,7 +16,7 @@ type MessageListProps = {
   onRetry: (messageId: number) => void;
 };
 
-export function MessageList({
+export const MessageList = memo(function MessageList({
   messages,
   loading,
   isFetchingNextPage,
@@ -55,4 +56,4 @@ export function MessageList({
       {error && <ErrorText>{String(error)}</ErrorText>}
     </MessageListCard>
   );
-}
+});

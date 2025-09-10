@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Button, Card } from "../styles/primitives";
 import {
   CharacterCard as CharacterCardStyled,
@@ -17,7 +18,7 @@ type CharacterCardProps = {
   onDelete: (id: number) => void;
 };
 
-export function CharacterCard({
+export const CharacterCard = memo(function CharacterCard({
   character,
   apiBase,
   onChat,
@@ -60,4 +61,4 @@ export function CharacterCard({
       </CharacterCardStyled>
     </Card>
   );
-}
+});

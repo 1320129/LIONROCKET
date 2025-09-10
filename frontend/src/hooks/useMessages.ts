@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useMemo, useCallback } from "react";
 import {
   useInfiniteQuery,
   useQueryClient,
@@ -42,27 +42,30 @@ export function useMessages(characterId: number) {
       lastPage.length === LIMIT ? lastPage[0].created_at : undefined,
   });
 
-  const messages = data?.pages.flat() ?? [];
+  const messages = useMemo(() => data?.pages.flat() ?? [], [data]);
 
   /**
    * 새 메시지 추가
    * 캐시에 새 메시지를 추가합니다.
    * @param message 추가할 메시지
    */
-  const addMessage = (message: MessageWithStatus) => {
-    queryClient.setQueryData(
-      ["messages", characterId],
-      (oldData: InfiniteData<MessageWithStatus[]> | undefined) => {
-        if (!oldData) {
-          return { pages: [[message]], pageParams: [undefined] };
+  const addMessage = useCallback(
+    (message: MessageWithStatus) => {
+      queryClient.setQueryData(
+        ["messages", characterId],
+        (oldData: InfiniteData<MessageWithStatus[]> | undefined) => {
+          if (!oldData) {
+            return { pages: [[message]], pageParams: [undefined] };
+          }
+          return {
+            ...oldData,
+            pages: [[...oldData.pages[0], message], ...oldData.pages.slice(1)],
+          };
         }
-        return {
-          ...oldData,
-          pages: [[...oldData.pages[0], message], ...oldData.pages.slice(1)],
-        };
-      }
-    );
-  };
+      );
+    },
+    [characterId, queryClient]
+  );
 
   /**
    * 메시지 업데이트
@@ -70,50 +73,56 @@ export function useMessages(characterId: number) {
    * @param id 업데이트할 메시지 ID
    * @param updates 업데이트할 내용
    */
-  const updateMessage = (id: number, updates: Partial<MessageWithStatus>) => {
-    queryClient.setQueryData(
-      ["messages", characterId],
-      (oldData: InfiniteData<MessageWithStatus[]> | undefined) => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          pages: oldData.pages.map((page) =>
-            page.map((m) => (m.id === id ? { ...m, ...updates } : m))
-          ),
-        };
-      }
-    );
-  };
+  const updateMessage = useCallback(
+    (id: number, updates: Partial<MessageWithStatus>) => {
+      queryClient.setQueryData(
+        ["messages", characterId],
+        (oldData: InfiniteData<MessageWithStatus[]> | undefined) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page) =>
+              page.map((m) => (m.id === id ? { ...m, ...updates } : m))
+            ),
+          };
+        }
+      );
+    },
+    [characterId, queryClient]
+  );
 
   /**
    * 스크롤 이벤트 핸들러
    * 상단 스크롤 시 이전 메시지를 로드하고 하단 근처 여부를 추적합니다.
    * @param e 스크롤 이벤트
    */
-  const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const el = e.currentTarget;
-    if (el.scrollTop <= 0 && hasNextPage && !isFetchingNextPage) {
-      void fetchNextPage().then(() => {
-        requestAnimationFrame(() => {
-          const list = listRef.current;
-          if (list) list.scrollTop = 1;
+  const onScroll = useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      const el = e.currentTarget;
+      if (el.scrollTop <= 0 && hasNextPage && !isFetchingNextPage) {
+        void fetchNextPage().then(() => {
+          requestAnimationFrame(() => {
+            const list = listRef.current;
+            if (list) list.scrollTop = 1;
+          });
         });
-      });
-    }
-    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
-    stickToBottomRef.current = nearBottom;
-  };
+      }
+      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
+      stickToBottomRef.current = nearBottom;
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage]
+  );
 
   /**
    * 하단으로 스크롤
    * 사용자가 하단 근처에 있을 때만 자동 스크롤합니다.
    */
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
       const el = listRef.current;
       if (el && stickToBottomRef.current) el.scrollTop = el.scrollHeight;
     });
-  };
+  }, []);
 
   return {
     messages,

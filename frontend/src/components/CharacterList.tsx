@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { CharacterCard } from "./CharacterCard";
 import { Character } from "../types/character";
 import { EmptyCharacterList } from "../styles/styled";
@@ -9,7 +10,7 @@ type CharacterListProps = {
   onDelete: (id: number) => void;
 };
 
-export function CharacterList({
+export const CharacterList = memo(function CharacterList({
   characters,
   apiBase,
   onChat,
@@ -36,4 +37,4 @@ export function CharacterList({
       ))}
     </>
   );
-}
+});

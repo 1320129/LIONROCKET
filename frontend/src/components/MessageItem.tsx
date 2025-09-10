@@ -1,3 +1,4 @@
+import { memo } from "react";
 import {
   MessageContainer,
   MessageMeta,
@@ -12,7 +13,10 @@ type MessageItemProps = {
   onRetry?: (messageId: number) => void;
 };
 
-export function MessageItem({ message, onRetry }: MessageItemProps) {
+export const MessageItem = memo(function MessageItem({
+  message,
+  onRetry,
+}: MessageItemProps) {
   const { role, content, created_at, status, error, id } = message;
 
   return (
@@ -35,4 +39,4 @@ export function MessageItem({ message, onRetry }: MessageItemProps) {
       </div>
     </MessageContainer>
   );
-}
+});

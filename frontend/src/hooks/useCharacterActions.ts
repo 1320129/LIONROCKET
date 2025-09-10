@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { api } from "../lib/api";
@@ -37,31 +38,37 @@ export function useCharacterActions() {
    * 사용자 확인 후 캐릭터를 삭제합니다.
    * @param id 삭제할 캐릭터 ID
    */
-  async function deleteCharacter(id: number) {
-    const ok = await dialog.confirm(
-      "이 캐릭터를 삭제하시겠습니까? 관련 대화도 함께 삭제됩니다.",
-      "삭제 확인",
-      "삭제",
-      "취소"
-    );
-    if (!ok) return;
-    deleteCharacterMutation.mutate(id);
-  }
+  const deleteCharacter = useCallback(
+    async (id: number) => {
+      const ok = await dialog.confirm(
+        "이 캐릭터를 삭제하시겠습니까? 관련 대화도 함께 삭제됩니다.",
+        "삭제 확인",
+        "삭제",
+        "취소"
+      );
+      if (!ok) return;
+      deleteCharacterMutation.mutate(id);
+    },
+    [dialog, deleteCharacterMutation]
+  );
 
   /**
    * 채팅 페이지로 이동
    * 캐릭터 정보를 캐시하고 채팅 페이지로 네비게이션합니다.
    * @param character 이동할 캐릭터 정보
    */
-  function goToChat(character: Character) {
-    saveLastCharacter(character.id);
-    try {
-      localStorage.setItem(`characterName:${character.id}`, character.name);
-    } catch {
-      // localStorage 접근 실패 시 무시
-    }
-    navigate(`/chat/${character.id}`);
-  }
+  const goToChat = useCallback(
+    (character: Character) => {
+      saveLastCharacter(character.id);
+      try {
+        localStorage.setItem(`characterName:${character.id}`, character.name);
+      } catch {
+        // localStorage 접근 실패 시 무시
+      }
+      navigate(`/chat/${character.id}`);
+    },
+    [navigate]
+  );
 
   return {
     deleteCharacter,
