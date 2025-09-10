@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 
 import { useCharacter } from "../hooks/useCharacter";
 import { useMessages } from "../hooks/useMessages";
@@ -22,6 +22,7 @@ import { MessageWithStatus } from "../types/message";
 export default function ChatPage() {
   const { id } = useParams();
   const characterId = Number(id);
+  const navigate = useNavigate();
 
   // Custom hooks
   const { characterName } = useCharacter(characterId);
@@ -54,8 +55,8 @@ export default function ChatPage() {
   );
 
   const handleLogout = useCallback(() => {
-    location.href = "/login";
-  }, []);
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   useBroadcastChannel(characterId, handleDraftUpdate, handleLogout);
 
@@ -108,9 +109,9 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (!validateCharacterId(characterId)) {
-      redirectToLastCharacter();
+      redirectToLastCharacter(navigate);
     }
-  }, [characterId]);
+  }, [characterId, navigate]);
 
   const loading = messagesLoading || chatLoading;
 

@@ -1,5 +1,6 @@
 import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 import { api } from "../lib/api";
 import { API_BASE } from "../lib/config";
@@ -46,6 +47,7 @@ type Character = {
 export default function HomePage() {
   const dialog = useDialog();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // react-query로 데이터 페칭
   const { data: me, isLoading: meLoading, error: meError } = useQuery({
@@ -73,7 +75,7 @@ export default function HomePage() {
   async function onLogout() {
     await api("/auth/logout", { method: "POST" });
     broadcastLogout();
-    location.href = "/login";
+    navigate("/login", { replace: true });
   }
 
   const createCharacterMutation = useMutation({
@@ -148,7 +150,7 @@ export default function HomePage() {
     try {
       localStorage.setItem(`characterName:${c.id}`, c.name);
     } catch {}
-    location.href = `/chat/${c.id}`;
+    navigate(`/chat/${c.id}`);
   }
 
   if (loading) return <LoadingContainer>불러오는 중...</LoadingContainer>;
