@@ -2,6 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import { Button, Card } from "./primitives";
 import { DialogContext } from "./useDialog";
+import { DialogTitle, DialogMessage, DialogActions } from "./styled";
 
 const Backdrop = styled.div`
   position: fixed;
@@ -98,14 +99,12 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
         >
           <DialogCard onClick={(e) => e.stopPropagation()}>
             {state.title && (
-              <div style={{ fontWeight: 600, marginBottom: 8 }}>
+              <DialogTitle>
                 {state.title}
-              </div>
+              </DialogTitle>
             )}
-            <div style={{ marginBottom: 16 }}>{state.message}</div>
-            <div
-              style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}
-            >
+            <DialogMessage>{state.message}</DialogMessage>
+            <DialogActions>
               {state.showCancel && (
                 <Button onClick={() => state.onCancel?.()}>
                   {state.cancelText || "취소"}
@@ -114,7 +113,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
               <Button variant="primary" onClick={() => state.onOk?.()}>
                 {state.okText || "확인"}
               </Button>
-            </div>
+            </DialogActions>
           </DialogCard>
         </Backdrop>
       )}

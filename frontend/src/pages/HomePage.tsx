@@ -1,4 +1,5 @@
 import React from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { API_BASE } from "../lib/config";
 import { broadcastLogout, saveLastCharacter } from "../lib/persist";
@@ -12,6 +13,24 @@ import {
   SectionTitle,
 } from "../ui/primitives";
 import { useDialog } from "../ui/useDialog";
+import {
+  LoadingContainer,
+  ErrorContainer,
+  PageContainer,
+  Title,
+  Subtitle,
+  FormContainer,
+  GridContainer,
+  CharacterCard,
+  CharacterInfo,
+  CharacterName,
+  CharacterMeta,
+  ImagePreview,
+  PreviewImage,
+  ThumbnailImage,
+  ErrorText,
+  FlexContainer,
+} from "../ui/styled";
 
 type Character = {
   id: number;
@@ -24,12 +43,18 @@ type Character = {
 
 export default function HomePage() {
   const dialog = useDialog();
-  const [me, setMe] = React.useState<{ id: number; email: string } | null>(
-    null
-  );
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-  const [characters, setCharacters] = React.useState<Character[]>([]);
+  const queryClient = useQueryClient();
+
+  // react-query로 데이터 페칭
+  const { data: me, isLoading: meLoading, error: meError } = useQuery({
+    queryKey: ["auth", "me"],
+    queryFn: () => api<{ id: number; email: string }>("/auth/me"),
+  });
+
+  const { data: characters = [], isLoading: charactersLoading, error: charactersError } = useQuery({
+    queryKey: ["characters"],
+    queryFn: () => api<Character[]>("/characters"),
+  });
 
   const [name, setName] = React.useState("");
   const [prompt, setPrompt] = React.useState("");
@@ -40,26 +65,33 @@ export default function HomePage() {
     [file]
   );
 
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const res = await api<{ id: number; email: string }>("/auth/me");
-        setMe(res);
-        const list = await api<Character[]>("/characters");
-        setCharacters(list);
-      } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : "요청 실패");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  const loading = meLoading || charactersLoading;
+  const error = meError?.message || charactersError?.message || null;
 
   async function onLogout() {
     await api("/auth/logout", { method: "POST" });
     broadcastLogout();
     location.href = "/login";
   }
+
+  const createCharacterMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      return api<Character>("/characters", {
+        method: "POST",
+        body: formData,
+      });
+    },
+    onSuccess: (newChar) => {
+      queryClient.setQueryData(["characters"], (old: Character[] = []) => [newChar, ...old]);
+      setName("");
+      setPrompt("");
+      setFile(null);
+      setFileError(null);
+    },
+    onError: async (e: unknown) => {
+      await dialog.alert(e instanceof Error ? e.message : "생성 실패", "오류");
+    },
+  });
 
   async function onCreateCharacter(e: React.FormEvent) {
     e.preventDefault();
@@ -80,22 +112,23 @@ export default function HomePage() {
     fd.append("name", name);
     fd.append("prompt", prompt);
     if (file) fd.append("thumbnail", file);
-    const res = await fetch(`${API_BASE}/characters`, {
-      method: "POST",
-      credentials: "include",
-      body: fd,
-    });
-    if (!res.ok) {
-      const t = await res.text();
-      await dialog.alert(`생성 실패: ${t}`, "오류");
-      return;
-    }
-    const created = (await res.json()) as Character;
-    setCharacters((prev) => [created, ...prev]);
-    setName("");
-    setPrompt("");
-    setFile(null);
+    
+    createCharacterMutation.mutate(fd);
   }
+
+  const deleteCharacterMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return api(`/characters/${id}`, { method: "DELETE" });
+    },
+    onSuccess: (_, id) => {
+      queryClient.setQueryData(["characters"], (old: Character[] = []) => 
+        old.filter((c) => c.id !== id)
+      );
+    },
+    onError: async (e: unknown) => {
+      await dialog.alert(e instanceof Error ? e.message : "삭제 실패", "오류");
+    },
+  });
 
   async function onDeleteCharacter(id: number) {
     const ok = await dialog.confirm(
@@ -105,12 +138,7 @@ export default function HomePage() {
       "취소"
     );
     if (!ok) return;
-    try {
-      await api(`/characters/${id}`, { method: "DELETE" });
-      setCharacters((prev) => prev.filter((c) => c.id !== id));
-    } catch (e: unknown) {
-      await dialog.alert(e instanceof Error ? e.message : "삭제 실패", "오류");
-    }
+    deleteCharacterMutation.mutate(id);
   }
 
   function goChat(c: Character) {
@@ -121,22 +149,19 @@ export default function HomePage() {
     location.href = `/chat/${c.id}`;
   }
 
-  if (loading) return <div style={{ padding: 24 }}>불러오는 중...</div>;
-  if (error) return <div style={{ padding: 24, color: "red" }}>{error}</div>;
+  if (loading) return <LoadingContainer>불러오는 중...</LoadingContainer>;
+  if (error) return <ErrorContainer>{error}</ErrorContainer>;
 
   return (
-    <div style={{ padding: 24 }}>
-      <h2 style={{ marginBottom: 8 }}>환영합니다</h2>
-      <div style={{ marginBottom: 12 }}>로그인: {me?.email}</div>
+    <PageContainer>
+      <Title>환영합니다</Title>
+      <Subtitle>로그인: {me?.email}</Subtitle>
       <Button onClick={onLogout}>로그아웃</Button>
 
       <Grid columns={2} style={{ marginTop: 24 }}>
         <div>
           <SectionTitle>캐릭터 생성</SectionTitle>
-          <form
-            onSubmit={onCreateCharacter}
-            style={{ display: "grid", gap: 8, maxWidth: 520 }}
-          >
+          <FormContainer onSubmit={onCreateCharacter}>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -155,75 +180,67 @@ export default function HomePage() {
               onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
             {previewUrl && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <img
+              <ImagePreview>
+                <PreviewImage
                   src={previewUrl}
                   width={64}
                   height={64}
-                  style={{ objectFit: "cover", borderRadius: 8 }}
                 />
                 <Button type="button" onClick={() => setFile(null)}>
                   이미지 제거
                 </Button>
-              </div>
+              </ImagePreview>
             )}
-            {fileError && <div style={{ color: "red" }}>{fileError}</div>}
+            {fileError && <ErrorText>{fileError}</ErrorText>}
             <Button type="submit" variant="primary">
               생성
             </Button>
-          </form>
+          </FormContainer>
         </div>
 
         <div>
           <SectionTitle>캐릭터 목록</SectionTitle>
-          <div style={{ display: "grid", gap: 12 }}>
+          <GridContainer>
             {characters.map((c) => (
-              <Card
-                key={c.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  padding: 12,
-                }}
-              >
-                {c.thumbnail_path && (
-                  <img
-                    src={`${API_BASE}/${c.thumbnail_path}`}
-                    alt={c.name}
-                    width={48}
-                    height={48}
-                    loading="lazy"
-                    style={{ objectFit: "cover", borderRadius: 8 }}
-                  />
-                )}
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600 }}>{c.name}</div>
-                  <div className="muted" style={{ fontSize: 12 }}>
-                    {c.prompt.slice(0, 80)}
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <Button
-                    type="button"
-                    variant="primary"
-                    onClick={() => goChat(c)}
-                  >
-                    대화하기
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="danger"
-                    onClick={() => onDeleteCharacter(c.id)}
-                  >
-                    삭제
-                  </Button>
-                </div>
+              <Card key={c.id}>
+                <CharacterCard>
+                  {c.thumbnail_path && (
+                    <ThumbnailImage
+                      src={`${API_BASE}/${c.thumbnail_path}`}
+                      alt={c.name}
+                      width={48}
+                      height={48}
+                      loading="lazy"
+                    />
+                  )}
+                  <CharacterInfo>
+                    <CharacterName>{c.name}</CharacterName>
+                    <CharacterMeta className="muted">
+                      {c.prompt.slice(0, 80)}
+                    </CharacterMeta>
+                  </CharacterInfo>
+                  <FlexContainer>
+                    <Button
+                      type="button"
+                      variant="primary"
+                      onClick={() => goChat(c)}
+                    >
+                      대화하기
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="danger"
+                      onClick={() => onDeleteCharacter(c.id)}
+                    >
+                      삭제
+                    </Button>
+                  </FlexContainer>
+                </CharacterCard>
               </Card>
             ))}
-          </div>
+          </GridContainer>
         </div>
       </Grid>
-    </div>
+    </PageContainer>
   );
 }

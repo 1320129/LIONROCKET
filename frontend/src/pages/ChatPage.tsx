@@ -12,6 +12,7 @@ import {
   validateCharacterId,
   redirectToLastCharacter,
 } from "../utils/chatUtils";
+import { ChatContainer, ChatHeader } from "../ui/styled";
 
 type MessageWithStatus = {
   id: number;
@@ -118,10 +119,10 @@ export default function ChatPage() {
   const loading = messagesLoading || chatLoading;
 
   return (
-    <div style={{ padding: 24, display: "grid", gap: 12 }}>
+    <ChatContainer>
       <Row style={{ justifyContent: "space-between" }}>
         <Link to="/">← 캐릭터 목록</Link>
-        <div style={{ fontWeight: 600 }}>{characterName}</div>
+        <ChatHeader>{characterName}</ChatHeader>
       </Row>
 
       <MessageList
@@ -142,6 +143,6 @@ export default function ChatPage() {
         onInputChange={setInput}
         onSubmit={handleSend}
       />
-    </div>
+    </ChatContainer>
   );
 }

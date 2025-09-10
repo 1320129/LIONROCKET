@@ -1,42 +1,47 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "../lib/api";
+import {
+  LoginContainer,
+  LoginForm,
+  LoginActions,
+  ErrorText,
+} from "../ui/styled";
 
 export default function LoginPage() {
   const nav = useNavigate();
   const [mode, setMode] = React.useState<"login" | "register">("login");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [error, setError] = React.useState<string | null>(null);
-  const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
     api("/auth/logout", { method: "POST" }).catch(() => {});
   }, []);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    try {
+  const authMutation = useMutation({
+    mutationFn: async ({ email, password }: { email: string; password: string }) => {
       const path = mode === "login" ? "/auth/login" : "/auth/register";
-      await api(path, {
+      return api(path, {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
+    },
+    onSuccess: () => {
       nav("/", { replace: true });
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "요청 실패");
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    authMutation.mutate({ email, password });
   }
 
   return (
-    <div style={{ maxWidth: 360, margin: "80px auto", padding: 16 }}>
+    <LoginContainer>
       <h1>AI Chat 로그인</h1>
-      <form onSubmit={onSubmit}>
-        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+      <LoginForm onSubmit={onSubmit}>
+        <LoginActions>
           <button
             type="button"
             onClick={() => setMode("login")}
@@ -51,7 +56,7 @@ export default function LoginPage() {
           >
             회원가입
           </button>
-        </div>
+        </LoginActions>
         <div style={{ display: "grid", gap: 8 }}>
           <input
             type="email"
@@ -68,12 +73,12 @@ export default function LoginPage() {
             minLength={6}
             required
           />
-          <button type="submit" disabled={loading}>
-            {loading ? "처리중..." : mode === "login" ? "로그인" : "회원가입"}
+          <button type="submit" disabled={authMutation.isPending}>
+            {authMutation.isPending ? "처리중..." : mode === "login" ? "로그인" : "회원가입"}
           </button>
-          {error && <div style={{ color: "red" }}>{error}</div>}
+          {authMutation.error && <ErrorText>{authMutation.error.message}</ErrorText>}
         </div>
-      </form>
-    </div>
+      </LoginForm>
+    </LoginContainer>
   );
 }

@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { theme as appTheme } from "./ui/theme";
 import { GlobalStyle } from "./ui/GlobalStyle";
 import { Container, PageHeader, Button as Btn } from "./ui/primitives";
@@ -11,6 +11,7 @@ import HomePage from "./pages/HomePage";
 import { API_BASE } from "./lib/config";
 import { getChannel, readTheme, saveTheme } from "./lib/persist";
 import ChatPage from "./pages/ChatPage";
+import { AuthLoading, AppTitle } from "./ui/styled";
 
 // QueryClient 인스턴스 생성
 const queryClient = new QueryClient({
@@ -23,21 +24,20 @@ const queryClient = new QueryClient({
 });
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
-  const [authed, setAuthed] = React.useState<boolean | null>(null);
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch(`${API_BASE}/auth/me`, {
-          credentials: "include",
-        });
-        setAuthed(res.ok);
-      } catch {
-        setAuthed(false);
-      }
-    })();
-  }, []);
-  if (authed === null) return <div style={{ padding: 24 }}>Loading...</div>;
-  return authed ? <>{children}</> : <Navigate to="/login" replace />;
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["auth", "check"],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/auth/me`, {
+        credentials: "include",
+      });
+      return res.ok;
+    },
+    retry: false,
+  });
+
+  if (isLoading) return <AuthLoading>Loading...</AuthLoading>;
+  if (error || !data) return <Navigate to="/login" replace />;
+  return <>{children}</>;
 }
 
 export default function App() {
@@ -75,7 +75,7 @@ export default function App() {
           <BrowserRouter>
             <Container>
               <PageHeader>
-                <div style={{ fontWeight: 700 }}>AI Chat</div>
+                <AppTitle>AI Chat</AppTitle>
                 <div className="row">
                   <Btn
                     onClick={() =>
