@@ -16,12 +16,12 @@ export function useBroadcastChannel(
         characterId?: number;
         value?: unknown;
       };
-      
+
       if (data?.type === "draft" && data.characterId === characterId) {
         const value = (data as { value?: unknown }).value;
         onDraftUpdate(String(value || ""));
       }
-      
+
       if (data?.type === "logout") {
         onLogout();
       }
