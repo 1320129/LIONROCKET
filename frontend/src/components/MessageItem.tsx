@@ -1,5 +1,10 @@
 import React from "react";
-import { MessageContainer, MessageMeta, RetryButton, MutedText } from "../ui/styled";
+import {
+  MessageContainer,
+  MessageMeta,
+  RetryButton,
+  MutedText,
+} from "../ui/styled";
 import { formatMessageTime } from "../utils/chatUtils";
 import { MessageWithStatus } from "../types/message";
 
