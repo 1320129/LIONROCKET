@@ -8,7 +8,10 @@ import { useDraft } from "../hooks/useDraft";
 import { useBroadcastChannel } from "../hooks/useBroadcastChannel";
 import { MessageList } from "../components/MessageList";
 import { ChatInput } from "../components/ChatInput";
-import { validateCharacterId, redirectToLastCharacter } from "../utils/chatUtils";
+import {
+  validateCharacterId,
+  redirectToLastCharacter,
+} from "../utils/chatUtils";
 
 type MessageWithStatus = {
   id: number;
@@ -39,13 +42,20 @@ export default function ChatPage() {
     scrollToBottom,
     setError,
   } = useMessages(characterId);
-  const { loading: chatLoading, sendMessage, retryMessage } = useChat(characterId);
+  const {
+    loading: chatLoading,
+    sendMessage,
+    retryMessage,
+  } = useChat(characterId);
   const { input, setInput } = useDraft(characterId);
 
   // Broadcast channel handlers
-  const handleDraftUpdate = useCallback((value: string) => {
-    setInput(value);
-  }, [setInput]);
+  const handleDraftUpdate = useCallback(
+    (value: string) => {
+      setInput(value);
+    },
+    [setInput]
+  );
 
   const handleLogout = useCallback(() => {
     location.href = "/login";
@@ -53,12 +63,14 @@ export default function ChatPage() {
 
   useBroadcastChannel(characterId, handleDraftUpdate, handleLogout);
 
-  // Event handlers
   const handleSend = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      
-      const onSuccess = (userMsg: MessageWithStatus, assistantMsg: MessageWithStatus) => {
+
+      const onSuccess = (
+        userMsg: MessageWithStatus,
+        assistantMsg: MessageWithStatus
+      ) => {
         addMessage(userMsg);
         updateMessage(userMsg.id, { status: "sent" });
         addMessage(assistantMsg);
@@ -75,7 +87,15 @@ export default function ChatPage() {
       await sendMessage(input, onSuccess, onError);
       setInput("");
     },
-    [input, sendMessage, addMessage, updateMessage, scrollToBottom, setError, setInput]
+    [
+      input,
+      sendMessage,
+      addMessage,
+      updateMessage,
+      scrollToBottom,
+      setError,
+      setInput,
+    ]
   );
 
   const handleRetry = useCallback(
@@ -99,10 +119,16 @@ export default function ChatPage() {
 
       await retryMessage(messageId, target.content, onSuccess, onError);
     },
-    [messages, retryMessage, updateMessage, addMessage, scrollToBottom, setError]
+    [
+      messages,
+      retryMessage,
+      updateMessage,
+      addMessage,
+      scrollToBottom,
+      setError,
+    ]
   );
 
-  // Character ID validation
   useEffect(() => {
     if (!validateCharacterId(characterId)) {
       redirectToLastCharacter();
@@ -117,7 +143,7 @@ export default function ChatPage() {
         <Link to="/">← 캐릭터 목록</Link>
         <div style={{ fontWeight: 600 }}>{characterName}</div>
       </Row>
-      
+
       <MessageList
         messages={messages}
         loading={messagesLoading}
@@ -129,7 +155,7 @@ export default function ChatPage() {
         onLoadOlder={loadOlder}
         onRetry={handleRetry}
       />
-      
+
       <ChatInput
         input={input}
         loading={loading}

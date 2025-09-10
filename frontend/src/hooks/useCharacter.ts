@@ -2,13 +2,17 @@ import { useState, useEffect } from "react";
 import { apiWithRetry } from "../lib/api";
 
 export function useCharacter(characterId: number) {
-  const [characterName, setCharacterName] = useState<string>(`캐릭터 #${characterId}`);
+  const [characterName, setCharacterName] = useState<string>(
+    `캐릭터 #${characterId}`
+  );
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const cachedName = (() => {
       try {
-        return localStorage.getItem(`characterName:${characterId}`) || undefined;
+        return (
+          localStorage.getItem(`characterName:${characterId}`) || undefined
+        );
       } catch {
         return undefined;
       }

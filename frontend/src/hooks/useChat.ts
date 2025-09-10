@@ -17,7 +17,10 @@ export function useChat(characterId: number) {
 
   const sendMessage = async (
     content: string,
-    onSuccess: (userMsg: MessageWithStatus, assistantMsg: MessageWithStatus) => void,
+    onSuccess: (
+      userMsg: MessageWithStatus,
+      assistantMsg: MessageWithStatus
+    ) => void,
     onError: (userMsg: MessageWithStatus, error: string) => void
   ) => {
     if (!content.trim()) return;
