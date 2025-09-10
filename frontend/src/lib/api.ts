@@ -6,7 +6,6 @@ export async function api<T>(
 ): Promise<T> {
   const headers: Record<string, string> = {};
 
-  // FormData가 아닌 경우에만 Content-Type을 설정
   if (!(options.body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
   }

@@ -23,7 +23,6 @@ export function CharacterForm({ onSuccess }: CharacterFormProps) {
     handleSubmit,
   } = useCharacterForm(onSuccess);
 
-  // 한글 조합 상태 관리
   const [isComposing, setIsComposing] = useState(false);
   const [localName, setLocalName] = useState(formData.name);
   const [localPrompt, setLocalPrompt] = useState(formData.prompt);
@@ -37,7 +36,6 @@ export function CharacterForm({ onSuccess }: CharacterFormProps) {
     handleFileChange(null);
   }
 
-  // 한글 입력 처리
   function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
     setLocalName(e.target.value);
     if (!isComposing) {
