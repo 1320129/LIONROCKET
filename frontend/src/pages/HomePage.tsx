@@ -11,7 +11,6 @@ import {
   Card,
   Input,
   Textarea,
-  Row,
   Grid,
   SectionTitle,
 } from "../ui/primitives";
@@ -51,12 +50,20 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   // react-query로 데이터 페칭
-  const { data: me, isLoading: meLoading, error: meError } = useQuery({
+  const {
+    data: me,
+    isLoading: meLoading,
+    error: meError,
+  } = useQuery({
     queryKey: ["auth", "me"],
     queryFn: () => api<{ id: number; email: string }>("/auth/me"),
   });
 
-  const { data: characters = [], isLoading: charactersLoading, error: charactersError } = useQuery({
+  const {
+    data: characters = [],
+    isLoading: charactersLoading,
+    error: charactersError,
+  } = useQuery({
     queryKey: ["characters"],
     queryFn: () => api<Character[]>("/characters"),
   });
@@ -87,7 +94,10 @@ export default function HomePage() {
       });
     },
     onSuccess: (newChar) => {
-      queryClient.setQueryData(["characters"], (old: Character[] = []) => [newChar, ...old]);
+      queryClient.setQueryData(["characters"], (old: Character[] = []) => [
+        newChar,
+        ...old,
+      ]);
       setName("");
       setPrompt("");
       setFile(null);
@@ -117,7 +127,7 @@ export default function HomePage() {
     fd.append("name", name);
     fd.append("prompt", prompt);
     if (file) fd.append("thumbnail", file);
-    
+
     createCharacterMutation.mutate(fd);
   }
 
@@ -126,7 +136,7 @@ export default function HomePage() {
       return api(`/characters/${id}`, { method: "DELETE" });
     },
     onSuccess: (_, id) => {
-      queryClient.setQueryData(["characters"], (old: Character[] = []) => 
+      queryClient.setQueryData(["characters"], (old: Character[] = []) =>
         old.filter((c) => c.id !== id)
       );
     },
@@ -186,11 +196,7 @@ export default function HomePage() {
             />
             {previewUrl && (
               <ImagePreview>
-                <PreviewImage
-                  src={previewUrl}
-                  width={64}
-                  height={64}
-                />
+                <PreviewImage src={previewUrl} width={64} height={64} />
                 <Button type="button" onClick={() => setFile(null)}>
                   이미지 제거
                 </Button>

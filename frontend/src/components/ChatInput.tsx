@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Input, Row } from "../ui/primitives";
+import { Button } from "../ui/primitives";
 import { ChatForm, ChatInput as StyledChatInput } from "../ui/styled";
 
 type ChatInputProps = {
@@ -7,7 +7,7 @@ type ChatInputProps = {
   loading: boolean;
   onInputChange: (value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
-}
+};
 
 export function ChatInput({
   input,
