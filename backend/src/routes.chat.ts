@@ -23,6 +23,8 @@ router.post("/", requireAuth, async (req, res) => {
   const db = getDb();
 
   let systemPrompt: string | undefined = undefined;
+  let conversationId: number;
+
   if (characterId) {
     const ch = db
       .prepare(
@@ -34,23 +36,42 @@ router.post("/", requireAuth, async (req, res) => {
     if (!ch)
       return res.status(404).json({ error: "캐릭터를 찾을 수 없습니다" });
     systemPrompt = ch.prompt;
+
+    // 사용자와 캐릭터 간의 대화 세션 찾기 또는 생성
+    let conversation = db
+      .prepare(
+        "SELECT id FROM conversations WHERE user_id = ? AND character_id = ? ORDER BY created_at DESC LIMIT 1"
+      )
+      .get(userId, characterId) as { id: number } | undefined;
+
+    if (!conversation) {
+      // 새로운 대화 세션 생성
+      const result = db
+        .prepare(
+          "INSERT INTO conversations (user_id, character_id, created_at) VALUES (?, ?, ?)"
+        )
+        .run(userId, characterId, Date.now());
+      conversationId = result.lastInsertRowid as number;
+    } else {
+      conversationId = conversation.id;
+    }
+  } else {
+    return res.status(400).json({ error: "캐릭터 ID가 필요합니다" });
   }
 
   const createdAt = Date.now();
   const insertedUserMsg = db
     .prepare(
-      "INSERT INTO messages (character_id, user_id, role, content, created_at) VALUES (?, NULL, 'user', ?, ?)"
+      "INSERT INTO messages (conversation_id, character_id, user_id, role, content, created_at) VALUES (?, ?, ?, 'user', ?, ?)"
     )
-    .run(characterId ?? null, message, createdAt);
+    .run(conversationId, characterId, userId, message, createdAt);
 
   try {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey)
-      return res
-        .status(500)
-        .json({
-          error: "서버 환경변수 ANTHROPIC_API_KEY가 설정되지 않았습니다",
-        });
+      return res.status(500).json({
+        error: "서버 환경변수 ANTHROPIC_API_KEY가 설정되지 않았습니다",
+      });
 
     const model = parsed.data.model || "claude-3-5-sonnet-20240620";
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -86,8 +107,8 @@ router.post("/", requireAuth, async (req, res) => {
 
     const createdAtAssistant = Date.now();
     db.prepare(
-      "INSERT INTO messages (character_id, user_id, role, content, created_at) VALUES (?, NULL, 'assistant', ?, ?)"
-    ).run(characterId ?? null, reply, createdAtAssistant);
+      "INSERT INTO messages (conversation_id, character_id, user_id, role, content, created_at) VALUES (?, ?, ?, 'assistant', ?, ?)"
+    ).run(conversationId, characterId, userId, reply, createdAtAssistant);
 
     return res.json({ reply, createdAt: createdAtAssistant });
   } catch (e: any) {

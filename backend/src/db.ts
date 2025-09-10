@@ -39,18 +39,37 @@ export function getDb(): Database.Database {
   ).run();
 
   db.prepare(
+    `CREATE TABLE IF NOT EXISTS conversations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      character_id INTEGER NOT NULL,
+      created_at INTEGER NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE
+    )`
+  ).run();
+
+  db.prepare(
     `CREATE TABLE IF NOT EXISTS messages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      conversation_id INTEGER NOT NULL,
       character_id INTEGER NOT NULL,
       user_id INTEGER NULL,
       role TEXT NOT NULL CHECK (role IN ('user','assistant')),
       content TEXT NOT NULL,
       created_at INTEGER NOT NULL,
+      FOREIGN KEY(conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
       FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE,
       FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
     )`
   ).run();
 
+  db.prepare(
+    `CREATE INDEX IF NOT EXISTS idx_conversations_user_character ON conversations(user_id, character_id)`
+  ).run();
+  db.prepare(
+    `CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id, created_at)`
+  ).run();
   db.prepare(
     `CREATE INDEX IF NOT EXISTS idx_messages_character ON messages(character_id, created_at)`
   ).run();

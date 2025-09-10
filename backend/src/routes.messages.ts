@@ -27,17 +27,29 @@ router.get("/", requireAuth, (req, res) => {
     .get(characterId, userId) as { id: number } | undefined;
   if (!ch) return res.status(404).json({ error: "캐릭터를 찾을 수 없습니다" });
 
+  // 사용자와 캐릭터 간의 대화 세션 찾기
+  const conversation = db
+    .prepare(
+      "SELECT id FROM conversations WHERE user_id = ? AND character_id = ? ORDER BY created_at DESC LIMIT 1"
+    )
+    .get(userId, characterId) as { id: number } | undefined;
+
+  if (!conversation) {
+    // 대화 세션이 없으면 빈 배열 반환
+    return res.json([]);
+  }
+
   const rows = before
     ? db
         .prepare(
-          "SELECT id, role, content, created_at FROM messages WHERE character_id = ? AND created_at < ? ORDER BY created_at DESC LIMIT ?"
+          "SELECT id, role, content, created_at FROM messages WHERE conversation_id = ? AND created_at < ? ORDER BY created_at DESC LIMIT ?"
         )
-        .all(characterId, before, limit)
+        .all(conversation.id, before, limit)
     : db
         .prepare(
-          "SELECT id, role, content, created_at FROM messages WHERE character_id = ? ORDER BY created_at DESC LIMIT ?"
+          "SELECT id, role, content, created_at FROM messages WHERE conversation_id = ? ORDER BY created_at DESC LIMIT ?"
         )
-        .all(characterId, limit);
+        .all(conversation.id, limit);
 
   // Return ascending order for UI
   const asc = (rows as any[]).reverse();

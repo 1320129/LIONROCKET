@@ -8,7 +8,7 @@ import { apiWithRetry } from "../lib/api";
 import { MessageWithStatus } from "../types/message";
 import { useAuth } from "./useAuth";
 
-const LIMIT = 30;
+const LIMIT = 10;
 
 /**
  * 메시지 관리 훅
@@ -48,7 +48,8 @@ export function useMessages(characterId: number) {
       lastPage.length === LIMIT ? lastPage[0].created_at : undefined,
   });
 
-  const messages = data?.pages.flat() ?? [];
+  const messages =
+    data?.pages.flat().sort((a, b) => a.created_at - b.created_at) ?? [];
 
   /**
    * 새 메시지 추가
@@ -62,9 +63,14 @@ export function useMessages(characterId: number) {
         if (!oldData) {
           return { pages: [[message]], pageParams: [undefined] };
         }
+        // 마지막 페이지에 새 메시지를 뒤쪽에 추가
+        const lastPageIndex = oldData.pages.length - 1;
+        const updatedPages = [...oldData.pages];
+        updatedPages[lastPageIndex] = [...updatedPages[lastPageIndex], message];
+
         return {
           ...oldData,
-          pages: [[...oldData.pages[0], message], ...oldData.pages.slice(1)],
+          pages: updatedPages,
         };
       }
     );
