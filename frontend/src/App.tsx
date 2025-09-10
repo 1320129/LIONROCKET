@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-quer
 
 import { API_BASE } from "./lib/config";
 import { getChannel, readTheme, saveTheme } from "./lib/persist";
+import { api } from "./lib/api";
 
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
@@ -30,10 +31,12 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   const { data, isLoading, error } = useQuery({
     queryKey: ["auth", "check"],
     queryFn: async () => {
-      const res = await fetch(`${API_BASE}/auth/me`, {
-        credentials: "include",
-      });
-      return res.ok;
+      try {
+        await api("/auth/me");
+        return true;
+      } catch {
+        return false;
+      }
     },
     retry: false,
   });
