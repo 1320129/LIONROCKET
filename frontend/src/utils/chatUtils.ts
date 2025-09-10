@@ -5,10 +5,10 @@ export function validateCharacterId(characterId: number): boolean {
   return !Number.isNaN(characterId) && characterId > 0;
 }
 
-export function redirectToLastCharacter(): void {
+export function redirectToLastCharacter(navigate: (path: string, options?: { replace?: boolean }) => void): void {
   const last = readLastCharacter();
   if (last) {
-    location.replace(`/chat/${last}`);
+    navigate(`/chat/${last}`, { replace: true });
   }
 }
 
