@@ -98,6 +98,5 @@ export function useMessages(characterId: number) {
     updateMessage,
     onScroll,
     scrollToBottom,
-    setError: () => {}, // react-query의 error는 자동으로 관리되므로 빈 함수
   };
 }
