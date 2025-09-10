@@ -33,6 +33,7 @@ import {
   ThumbnailImage,
   ErrorText,
   FlexContainer,
+  MutedText,
 } from "../ui/styled";
 
 type Character = {
@@ -219,8 +220,8 @@ export default function HomePage() {
                   )}
                   <CharacterInfo>
                     <CharacterName>{c.name}</CharacterName>
-                    <CharacterMeta className="muted">
-                      {c.prompt.slice(0, 80)}
+                    <CharacterMeta>
+                      <MutedText>{c.prompt.slice(0, 80)}</MutedText>
                     </CharacterMeta>
                   </CharacterInfo>
                   <FlexContainer>

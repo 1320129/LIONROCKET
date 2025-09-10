@@ -59,11 +59,4 @@ export const GlobalStyle = createGlobalStyle`
   input::placeholder, textarea::placeholder {
     color: var(--muted);
   }
-
-  /* Responsive design */
-  @media (max-width: 640px) {
-    .container {
-      padding: 12px;
-    }
-  }
 `;
