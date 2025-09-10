@@ -1,6 +1,5 @@
 import styled from "styled-components";
 
-// 공통 스타일드 컴포넌트들
 export const LoadingContainer = styled.div`
   padding: 24px;
 `;
@@ -22,7 +21,6 @@ export const MutedText = styled.span`
   color: var(--muted);
 `;
 
-// 인라인 스타일 대체용 컴포넌트들
 export const MessageListCard = styled.div`
   padding: 12px;
   min-height: 300px;
@@ -190,4 +188,23 @@ export const AppTitle = styled.div`
 
 export const AuthLoading = styled.div`
   padding: 24px;
+`;
+
+// Dialog 관련 스타일
+export const DialogBackdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+`;
+
+export const DialogCard = styled.div`
+  width: min(92vw, 420px);
+  padding: 16px;
+  background: ${({ theme }) => theme.colors.background};
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 `;

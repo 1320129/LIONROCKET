@@ -1,23 +1,7 @@
 import { useState, useMemo } from "react";
-import styled from "styled-components";
-import { Button, Card } from "../styles/primitives";
-import { DialogTitle, DialogMessage, DialogActions } from "../styles/styled";
+import { Button } from "../styles/primitives";
+import { DialogTitle, DialogMessage, DialogActions, DialogBackdrop, DialogCard } from "../styles/styled";
 import { DialogAPI, DialogContext } from "../hooks/DialogContext";
-
-const Backdrop = styled.div`
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-`;
-
-const DialogCard = styled(Card)`
-  width: min(92vw, 420px);
-  padding: 16px;
-`;
 
 type DialogState = {
   open: boolean;
@@ -80,7 +64,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
     <DialogContext.Provider value={api}>
       {children}
       {state.open && (
-        <Backdrop
+        <DialogBackdrop
           onClick={() =>
             state.showCancel ? state.onCancel?.() : state.onOk?.()
           }
@@ -99,7 +83,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
               </Button>
             </DialogActions>
           </DialogCard>
-        </Backdrop>
+        </DialogBackdrop>
       )}
     </DialogContext.Provider>
   );
