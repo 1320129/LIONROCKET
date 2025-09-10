@@ -13,10 +13,10 @@ type MessageWithStatus = {
 
 interface MessageListProps {
   messages: MessageWithStatus[];
-  loading: boolean;
-  loadingOlder: boolean;
-  hasMore: boolean;
-  error: string | null;
+  status: "pending" | "error" | "success";
+  isFetchingNextPage: boolean;
+  hasNextPage?: boolean;
+  error: unknown;
   listRef: React.RefObject<HTMLDivElement>;
   onScroll: (e: React.UIEvent<HTMLDivElement>) => void;
   onLoadOlder: () => void;
@@ -25,9 +25,9 @@ interface MessageListProps {
 
 export function MessageList({
   messages,
-  loading,
-  loadingOlder,
-  hasMore,
+  status,
+  isFetchingNextPage,
+  hasNextPage,
   error,
   listRef,
   onScroll,
@@ -47,19 +47,19 @@ export function MessageList({
         flexDirection: "column",
       }}
     >
-      {hasMore && (
+      {hasNextPage && (
         <div style={{ marginBottom: 8 }}>
-          <Button onClick={onLoadOlder} disabled={loadingOlder}>
-            {loadingOlder ? "불러오는 중..." : "이전 메시지 더 보기"}
+          <Button onClick={onLoadOlder} disabled={isFetchingNextPage}>
+            {isFetchingNextPage ? "불러오는 중..." : "이전 메시지 더 보기"}
           </Button>
         </div>
       )}
 
-      {loading && messages.length === 0 && (
+      {status === "pending" && messages.length === 0 && (
         <EmptyState>대화를 불러오고 있습니다...</EmptyState>
       )}
 
-      {!loading && messages.length === 0 && (
+      {status === "success" && messages.length === 0 && (
         <EmptyState>대화를 시작해보세요!</EmptyState>
       )}
 
@@ -71,7 +71,7 @@ export function MessageList({
         />
       ))}
 
-      {error && <div style={{ color: "red" }}>{error}</div>}
+      {error && <div style={{ color: "red" }}>{String(error)}</div>}
     </Card>
   );
 }

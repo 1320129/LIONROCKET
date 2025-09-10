@@ -1,4 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useRef } from "react";
+import {
+  useInfiniteQuery,
+  useQueryClient,
+  InfiniteData,
+} from "@tanstack/react-query";
 import { apiWithRetry } from "../lib/api";
 
 type Message = {
@@ -13,79 +18,79 @@ type MessageWithStatus = Message & {
   error?: string;
 };
 
+const LIMIT = 30;
+
 export function useMessages(characterId: number) {
-  const [messages, setMessages] = useState<MessageWithStatus[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingOlder, setLoadingOlder] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const listRef = useRef<HTMLDivElement | null>(null);
   const stickToBottomRef = useRef(true);
 
-  const loadMessages = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const limit = 30;
-      const list = await apiWithRetry<MessageWithStatus[]>(
-        `/messages?characterId=${characterId}&limit=${limit}`
-      );
-      setMessages(list);
-      setHasMore(list.length === limit);
-      // After initial load, scroll to bottom
-      requestAnimationFrame(() => {
-        const el = listRef.current;
-        if (el) el.scrollTop = el.scrollHeight;
-      });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data,
+    status,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery<MessageWithStatus[]>({
+    queryKey: ["messages", characterId],
+    queryFn: ({ pageParam }) =>
+      apiWithRetry<MessageWithStatus[]>(
+        `/messages?characterId=${characterId}&limit=${LIMIT}` +
+          (pageParam ? `&before=${pageParam}` : "")
+      ),
+    initialPageParam: undefined,
+    getNextPageParam: (lastPage) =>
+      lastPage.length === LIMIT ? lastPage[0].created_at : undefined,
+  });
 
-  const loadOlder = async () => {
-    if (loadingOlder || !hasMore || messages.length === 0) return;
-    setLoadingOlder(true);
-    try {
-      const limit = 30;
-      const oldest = messages[0]?.created_at;
-      const older = await apiWithRetry<MessageWithStatus[]>(
-        `/messages?characterId=${characterId}&limit=${limit}&before=${oldest}`
-      );
-      setMessages((prev) => [...older, ...prev]);
-      setHasMore(older.length === limit);
-      // keep scroll position roughly stable
-      requestAnimationFrame(() => {
-        const el = listRef.current;
-        if (el) el.scrollTop = 1; // nudge to avoid re-trigger at exact 0
-      });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
-    } finally {
-      setLoadingOlder(false);
-    }
-  };
+  const messages = data?.pages.flat() ?? [];
 
   const addMessage = (message: MessageWithStatus) => {
-    setMessages((prev) => [...prev, message]);
+    queryClient.setQueryData(
+      ["messages", characterId],
+      (oldData: InfiniteData<MessageWithStatus[]> | undefined) => {
+        if (!oldData) {
+          return { pages: [[message]], pageParams: [undefined] };
+        }
+        return {
+          ...oldData,
+          pages: [[...oldData.pages[0], message], ...oldData.pages.slice(1)],
+        };
+      }
+    );
   };
 
-  const updateMessage = (id: number, updates: Partial<MessageWithStatus>) => {
-    setMessages((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, ...updates } : m))
+  const updateMessage = (
+    id: number,
+    updates: Partial<MessageWithStatus>
+  ) => {
+    queryClient.setQueryData(
+      ["messages", characterId],
+      (oldData: InfiniteData<MessageWithStatus[]> | undefined) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page) =>
+            page.map((m) => (m.id === id ? { ...m, ...updates } : m))
+          ),
+        };
+      }
     );
   };
 
   const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const el = e.currentTarget;
-    if (el.scrollTop <= 0) {
-      void loadOlder();
+    if (el.scrollTop <= 0 && hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage().then(() => {
+        requestAnimationFrame(() => {
+          const list = listRef.current;
+          if (list) list.scrollTop = 1;
+        });
+      });
     }
-    // track whether user is near bottom (within 24px)
-    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
+    const nearBottom =
+      el.scrollHeight - el.scrollTop - el.clientHeight < 24;
     stickToBottomRef.current = nearBottom;
   };
 
@@ -96,22 +101,17 @@ export function useMessages(characterId: number) {
     });
   };
 
-  useEffect(() => {
-    void loadMessages();
-  }, [characterId]);
-
   return {
     messages,
-    loading,
-    loadingOlder,
-    hasMore,
+    status,
     error,
     listRef,
-    loadOlder,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     addMessage,
     updateMessage,
     onScroll,
     scrollToBottom,
-    setError,
   };
 }
