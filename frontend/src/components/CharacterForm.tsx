@@ -56,10 +56,12 @@ export function CharacterForm({ onSuccess }: CharacterFormProps) {
     setIsComposing(true);
   }
 
-  function handleCompositionEnd(e: React.CompositionEvent<HTMLInputElement | HTMLTextAreaElement>) {
+  function handleCompositionEnd(
+    e: React.CompositionEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) {
     setIsComposing(false);
     const value = e.currentTarget.value;
-    if (e.currentTarget.type === 'text') {
+    if (e.currentTarget.type === "text") {
       setLocalName(value);
       updateFormData({ name: value });
     } else {
@@ -100,11 +102,7 @@ export function CharacterForm({ onSuccess }: CharacterFormProps) {
         </ImagePreview>
       )}
       {formData.fileError && <ErrorText>{formData.fileError}</ErrorText>}
-      <Button
-        type="submit"
-        variant="primary"
-        disabled={loading}
-      >
+      <Button type="submit" variant="primary" disabled={loading}>
         {loading ? "생성 중..." : "생성"}
       </Button>
     </FormContainer>
