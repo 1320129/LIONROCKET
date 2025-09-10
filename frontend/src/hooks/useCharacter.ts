@@ -1,49 +1,32 @@
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { apiWithRetry } from "../lib/api";
 
 export function useCharacter(characterId: number) {
-  const [characterName, setCharacterName] = useState<string>(
-    `캐릭터 #${characterId}`
-  );
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const cachedName = (() => {
+  const { data, isLoading } = useQuery<{ id: number; name: string }>({
+    queryKey: ["character", characterId],
+    queryFn: async () => {
+      const ch = await apiWithRetry<{ id: number; name: string }>(
+        `/characters/${characterId}`,
+      );
       try {
-        return (
-          localStorage.getItem(`characterName:${characterId}`) || undefined
-        );
+        localStorage.setItem(`characterName:${characterId}`, ch.name);
+      } catch {
+        // ignore localStorage errors
+      }
+      return ch;
+    },
+    initialData: () => {
+      try {
+        const cachedName = localStorage.getItem(`characterName:${characterId}`);
+        return cachedName ? { id: characterId, name: cachedName } : undefined;
       } catch {
         return undefined;
       }
-    })();
+    },
+  });
 
-    if (cachedName) {
-      setCharacterName(cachedName);
-      return;
-    }
-
-    setLoading(true);
-    (async () => {
-      try {
-        const ch = await apiWithRetry<{ id: number; name: string }>(
-          `/characters/${characterId}`
-        );
-        if (ch?.name) {
-          setCharacterName(ch.name);
-          try {
-            localStorage.setItem(`characterName:${characterId}`, ch.name);
-          } catch {
-            // ignore localStorage errors
-          }
-        }
-      } catch {
-        // ignore fetch error; fallback name is already set
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [characterId]);
-
-  return { characterName, loading };
+  return {
+    characterName: data?.name ?? `캐릭터 #${characterId}`,
+    loading: isLoading,
+  };
 }

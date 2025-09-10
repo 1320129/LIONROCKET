@@ -1,4 +1,5 @@
 import React from "react";
+import styled from "styled-components";
 import { Button, Card, EmptyState } from "../ui/primitives";
 import { MessageItem } from "./MessageItem";
 
@@ -23,6 +24,23 @@ interface MessageListProps {
   onRetry: (messageId: number) => void;
 }
 
+const ListWrapper = styled(Card)`
+  padding: 12px;
+  min-height: 300px;
+  max-height: 480px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+`;
+
+const LoadMore = styled.div`
+  margin-bottom: 8px;
+`;
+
+const ErrorText = styled.div`
+  color: red;
+`;
+
 export function MessageList({
   messages,
   loading,
@@ -35,24 +53,13 @@ export function MessageList({
   onRetry,
 }: MessageListProps) {
   return (
-    <Card
-      ref={listRef}
-      onScroll={onScroll}
-      style={{
-        padding: 12,
-        minHeight: 300,
-        maxHeight: 480,
-        overflowY: "auto",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <ListWrapper ref={listRef} onScroll={onScroll}>
       {hasMore && (
-        <div style={{ marginBottom: 8 }}>
+        <LoadMore>
           <Button onClick={onLoadOlder} disabled={loadingOlder}>
             {loadingOlder ? "불러오는 중..." : "이전 메시지 더 보기"}
           </Button>
-        </div>
+        </LoadMore>
       )}
 
       {loading && messages.length === 0 && (
@@ -71,7 +78,7 @@ export function MessageList({
         />
       ))}
 
-      {error && <div style={{ color: "red" }}>{error}</div>}
-    </Card>
+      {error && <ErrorText>{error}</ErrorText>}
+    </ListWrapper>
   );
 }

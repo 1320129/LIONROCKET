@@ -42,7 +42,6 @@ const DialogContext = React.createContext<DialogContextValue | null>(null);
 
 export function DialogProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = React.useState<DialogState>({ open: false });
-  const resolverRef = React.useRef<((v: any) => void) | null>(null);
 
   function close() {
     setState({ open: false });
@@ -52,13 +51,11 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
     () => ({
       alert(msg, title) {
         return new Promise<void>((resolve) => {
-          resolverRef.current = resolve;
           setState({ open: true, title, message: msg, okText: "확인", showCancel: false, onOk: () => { resolve(); close(); } });
         });
       },
       confirm(msg, title, okText = "확인", cancelText = "취소") {
         return new Promise<boolean>((resolve) => {
-          resolverRef.current = resolve as any;
           setState({
             open: true,
             title,
@@ -96,6 +93,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useDialog() {
   const ctx = React.useContext(DialogContext);
   if (!ctx) throw new Error("useDialog must be used within DialogProvider");

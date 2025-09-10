@@ -1,4 +1,5 @@
 import React from "react";
+import styled from "styled-components";
 import { Button } from "../ui/primitives";
 import { formatMessageTime } from "../utils/chatUtils";
 
@@ -16,14 +17,25 @@ interface MessageItemProps {
   onRetry?: (messageId: number) => void;
 }
 
+const Wrapper = styled.div`
+  margin-bottom: 8px;
+`;
+
+const Meta = styled.div`
+  font-size: 12px;
+  color: #888;
+`;
+
+const RetryButton = styled(Button)`
+  margin-left: 8px;
+`;
+
 export function MessageItem({ message, onRetry }: MessageItemProps) {
   const { role, content, created_at, status, error, id } = message;
 
   return (
-    <div style={{ marginBottom: 8 }}>
-      <div style={{ fontSize: 12, color: "#888" }}>
-        {formatMessageTime(created_at)}
-      </div>
+    <Wrapper>
+      <Meta>{formatMessageTime(created_at)}</Meta>
       <div>
         <b>{role === "user" ? "나" : "AI"}</b>: {content}
         {role === "user" && status === "failed" && (
@@ -31,9 +43,9 @@ export function MessageItem({ message, onRetry }: MessageItemProps) {
             {" "}
             <span className="muted">({error || "실패"})</span>{" "}
             {onRetry && (
-              <Button onClick={() => onRetry(id)} style={{ marginLeft: 8 }}>
+              <RetryButton onClick={() => onRetry(id)}>
                 재전송
-              </Button>
+              </RetryButton>
             )}
           </>
         )}
@@ -41,6 +53,6 @@ export function MessageItem({ message, onRetry }: MessageItemProps) {
           <span className="muted"> (전송 중)</span>
         )}
       </div>
-    </div>
+    </Wrapper>
   );
 }

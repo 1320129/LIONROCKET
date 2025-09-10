@@ -1,4 +1,9 @@
 import React from "react";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { API_BASE } from "../lib/config";
 import { broadcastLogout, saveLastCharacter } from "../lib/persist";
@@ -7,7 +12,6 @@ import {
   Card,
   Input,
   Textarea,
-  Row,
   Grid,
   SectionTitle,
 } from "../ui/primitives";
@@ -24,12 +28,21 @@ type Character = {
 
 export default function HomePage() {
   const dialog = useDialog();
-  const [me, setMe] = React.useState<{ id: number; email: string } | null>(
-    null
-  );
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-  const [characters, setCharacters] = React.useState<Character[]>([]);
+  const queryClient = useQueryClient();
+
+  const { data: me } = useQuery<{ id: number; email: string }>({
+    queryKey: ["me"],
+    queryFn: () => api<{ id: number; email: string }>("/auth/me"),
+  });
+
+  const {
+    data: characters = [],
+    isLoading,
+    error,
+  } = useQuery<Character[]>({
+    queryKey: ["characters"],
+    queryFn: () => api<Character[]>("/characters"),
+  });
 
   const [name, setName] = React.useState("");
   const [prompt, setPrompt] = React.useState("");
@@ -40,26 +53,41 @@ export default function HomePage() {
     [file]
   );
 
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const res = await api<{ id: number; email: string }>("/auth/me");
-        setMe(res);
-        const list = await api<Character[]>("/characters");
-        setCharacters(list);
-      } catch (e: any) {
-        setError(e.message);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
   async function onLogout() {
     await api("/auth/logout", { method: "POST" });
     broadcastLogout();
     location.href = "/login";
   }
+
+  const createCharacter = useMutation({
+    mutationFn: async (fd: FormData) => {
+      const res = await fetch(`${API_BASE}/characters`, {
+        method: "POST",
+        credentials: "include",
+        body: fd,
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(`생성 실패: ${t}`);
+      }
+      return (await res.json()) as Character;
+    },
+    onSuccess: (created) => {
+      queryClient.setQueryData<Character[]>(["characters"], (prev) => [
+        created,
+        ...(prev || []),
+      ]);
+    },
+  });
+
+  const deleteCharacter = useMutation({
+    mutationFn: (id: number) => api(`/characters/${id}`, { method: "DELETE" }),
+    onSuccess: (_data, id) => {
+      queryClient.setQueryData<Character[]>(["characters"], (prev) =>
+        prev?.filter((c) => c.id !== id) || [],
+      );
+    },
+  });
 
   async function onCreateCharacter(e: React.FormEvent) {
     e.preventDefault();
@@ -80,21 +108,17 @@ export default function HomePage() {
     fd.append("name", name);
     fd.append("prompt", prompt);
     if (file) fd.append("thumbnail", file);
-    const res = await fetch(`${API_BASE}/characters`, {
-      method: "POST",
-      credentials: "include",
-      body: fd,
-    });
-    if (!res.ok) {
-      const t = await res.text();
-      await dialog.alert(`생성 실패: ${t}`, "오류");
-      return;
+    try {
+      await createCharacter.mutateAsync(fd);
+      setName("");
+      setPrompt("");
+      setFile(null);
+    } catch (err: unknown) {
+      await dialog.alert(
+        err instanceof Error ? err.message : "생성 실패",
+        "오류",
+      );
     }
-    const created = (await res.json()) as Character;
-    setCharacters((prev) => [created, ...prev]);
-    setName("");
-    setPrompt("");
-    setFile(null);
   }
 
   async function onDeleteCharacter(id: number) {
@@ -102,14 +126,14 @@ export default function HomePage() {
       "이 캐릭터를 삭제하시겠습니까? 관련 대화도 함께 삭제됩니다.",
       "삭제 확인",
       "삭제",
-      "취소"
+      "취소",
     );
     if (!ok) return;
     try {
-      await api(`/characters/${id}`, { method: "DELETE" });
-      setCharacters((prev) => prev.filter((c) => c.id !== id));
-    } catch (e: any) {
-      await dialog.alert(e?.message || "삭제 실패", "오류");
+      await deleteCharacter.mutateAsync(id);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "삭제 실패";
+      await dialog.alert(msg, "오류");
     }
   }
 
@@ -117,12 +141,19 @@ export default function HomePage() {
     saveLastCharacter(c.id);
     try {
       localStorage.setItem(`characterName:${c.id}`, c.name);
-    } catch {}
+    } catch {
+      /* ignore localStorage errors */
+    }
     location.href = `/chat/${c.id}`;
   }
 
-  if (loading) return <div style={{ padding: 24 }}>불러오는 중...</div>;
-  if (error) return <div style={{ padding: 24, color: "red" }}>{error}</div>;
+  if (isLoading) return <div style={{ padding: 24 }}>불러오는 중...</div>;
+  if (error)
+    return (
+      <div style={{ padding: 24, color: "red" }}>
+        {(error as Error).message}
+      </div>
+    );
 
   return (
     <div style={{ padding: 24 }}>

@@ -12,14 +12,17 @@ export async function api<T>(
   if (!res.ok) {
     let msg = "요청이 실패했습니다";
     try {
-      const data = (await res.json()) as any;
-      msg = data?.error || msg;
-    } catch {}
+      const data = (await res.json()) as unknown;
+      msg = (data as { error?: string })?.error || msg;
+    } catch {
+      // ignore parse errors
+    }
     throw new Error(msg);
   }
   try {
     return (await res.json()) as T;
   } catch {
+    // ignore parse errors and return undefined
     return undefined as unknown as T;
   }
 }

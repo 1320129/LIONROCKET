@@ -1,6 +1,14 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
 import { api } from "../lib/api";
+import { Button, Input, Card, Row } from "../ui/primitives";
+
+const FormCard = styled(Card)`
+  max-width: 360px;
+  margin: 80px auto;
+  padding: 16px;
+`;
 
 export default function LoginPage() {
   const nav = useNavigate();
@@ -26,42 +34,42 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
       nav("/", { replace: true });
-    } catch (err: any) {
-      setError(err.message || "요청 실패");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "요청 실패");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ maxWidth: 360, margin: "80px auto", padding: 16 }}>
+    <FormCard>
       <h1>AI Chat 로그인</h1>
       <form onSubmit={onSubmit}>
-        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-          <button
+        <Row style={{ marginBottom: 12 }}>
+          <Button
             type="button"
             onClick={() => setMode("login")}
             disabled={mode === "login"}
           >
             로그인
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={() => setMode("register")}
             disabled={mode === "register"}
           >
             회원가입
-          </button>
-        </div>
+          </Button>
+        </Row>
         <div style={{ display: "grid", gap: 8 }}>
-          <input
+          <Input
             type="email"
             placeholder="이메일"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-          <input
+          <Input
             type="password"
             placeholder="비밀번호 (6자 이상)"
             value={password}
@@ -69,12 +77,12 @@ export default function LoginPage() {
             minLength={6}
             required
           />
-          <button type="submit" disabled={loading}>
+          <Button type="submit" disabled={loading}>
             {loading ? "처리중..." : mode === "login" ? "로그인" : "회원가입"}
-          </button>
+          </Button>
           {error && <div style={{ color: "red" }}>{error}</div>}
         </div>
       </form>
-    </div>
+    </FormCard>
   );
 }

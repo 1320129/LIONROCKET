@@ -1,32 +1,25 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
+import { useQuery } from "@tanstack/react-query";
 import { theme as appTheme } from "./ui/theme";
 import { GlobalStyle } from "./ui/GlobalStyle";
 import { Container, PageHeader, Button as Btn } from "./ui/primitives";
 import { DialogProvider } from "./ui/Dialog";
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
-import { API_BASE } from "./lib/config";
 import { getChannel, readTheme, saveTheme } from "./lib/persist";
 import ChatPage from "./pages/ChatPage";
+import { api } from "./lib/api";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
-  const [authed, setAuthed] = React.useState<boolean | null>(null);
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch(`${API_BASE}/auth/me`, {
-          credentials: "include",
-        });
-        setAuthed(res.ok);
-      } catch {
-        setAuthed(false);
-      }
-    })();
-  }, []);
-  if (authed === null) return <div style={{ padding: 24 }}>Loading...</div>;
-  return authed ? <>{children}</> : <Navigate to="/login" replace />;
+  const { data, isLoading } = useQuery({
+    queryKey: ["me"],
+    queryFn: () => api<{ id: number; email: string }>("/auth/me"),
+    retry: false,
+  });
+  if (isLoading) return <div style={{ padding: 24 }}>Loading...</div>;
+  return data ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
 export default function App() {
@@ -48,11 +41,12 @@ export default function App() {
   React.useEffect(() => {
     const ch = getChannel();
     if (!ch) return;
-    const onMessage = (ev: MessageEvent<any>) => {
-      if (ev.data?.type === "theme") setColorMode(ev.data.value);
+    const onMessage = (ev: MessageEvent<unknown>) => {
+      const data = ev.data as { type?: string; value?: "light" | "dark" };
+      if (data?.type === "theme" && data.value) setColorMode(data.value);
     };
-    ch.addEventListener("message", onMessage as any);
-    return () => ch.removeEventListener("message", onMessage as any);
+    ch.addEventListener("message", onMessage as EventListener);
+    return () => ch.removeEventListener("message", onMessage as EventListener);
   }, []);
   return (
     <ThemeProvider theme={appTheme}>

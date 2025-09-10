@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import styled from "styled-components";
 import { Row } from "../ui/primitives";
 import { useCharacter } from "../hooks/useCharacter";
 import { useMessages } from "../hooks/useMessages";
@@ -137,12 +138,26 @@ export default function ChatPage() {
 
   const loading = messagesLoading || chatLoading;
 
+const Wrapper = styled.div`
+  padding: 24px;
+  display: grid;
+  gap: 12px;
+`;
+
+const HeaderRow = styled(Row)`
+  justify-content: space-between;
+`;
+
+const Title = styled.div`
+  font-weight: 600;
+`;
+
   return (
-    <div style={{ padding: 24, display: "grid", gap: 12 }}>
-      <Row style={{ justifyContent: "space-between" }}>
+    <Wrapper>
+      <HeaderRow>
         <Link to="/">← 캐릭터 목록</Link>
-        <div style={{ fontWeight: 600 }}>{characterName}</div>
-      </Row>
+        <Title>{characterName}</Title>
+      </HeaderRow>
 
       <MessageList
         messages={messages}
@@ -162,6 +177,6 @@ export default function ChatPage() {
         onInputChange={setInput}
         onSubmit={handleSend}
       />
-    </div>
+    </Wrapper>
   );
 }
