@@ -18,7 +18,14 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json());
+// JSON 파싱 미들웨어를 multipart 요청 제외하고 적용
+app.use((req, res, next) => {
+  const contentType = req.headers["content-type"];
+  if (contentType && contentType.includes("multipart/form-data")) {
+    return next();
+  }
+  express.json()(req, res, next);
+});
 app.use(cookieParser());
 // Ensure DB initializes on boot
 getDb();

@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "../lib/api";
 import { LoginCredentials } from "../types/auth";
@@ -15,13 +15,10 @@ import {
 
 export default function LoginPage() {
   const nav = useNavigate();
+  const queryClient = useQueryClient();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  useEffect(() => {
-    api("/auth/logout", { method: "POST" }).catch(() => {});
-  }, []);
 
   const authMutation = useMutation({
     mutationFn: async ({ email, password }: LoginCredentials) => {
@@ -31,7 +28,11 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      // 로그인 성공 시 인증 상태 강제 업데이트
+      queryClient.setQueryData(["auth", "check"], true);
+      // 약간의 지연 후 네비게이션 (상태 업데이트 보장)
+      await new Promise((resolve) => setTimeout(resolve, 100));
       nav("/", { replace: true });
     },
   });

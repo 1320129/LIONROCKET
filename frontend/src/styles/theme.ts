@@ -7,6 +7,8 @@ export const theme: DefaultTheme = {
     muted: "var(--muted)",
     border: "var(--border)",
     card: "var(--card)",
+    background: "var(--card)",
+    error: "#ef4444",
     primary: "#3b82f6",
     primaryHover: "#2563eb",
     danger: "#ef4444",
@@ -30,6 +32,8 @@ declare module "styled-components" {
       muted: string;
       border: string;
       card: string;
+      background: string;
+      error: string;
       primary: string;
       primaryHover: string;
       danger: string;

@@ -5,6 +5,7 @@ import {
   QueryClient,
   QueryClientProvider,
   useQuery,
+  useQueryClient,
 } from "@tanstack/react-query";
 
 import { getChannel, readTheme, saveTheme } from "./lib/persist";
@@ -31,6 +32,8 @@ const queryClient = new QueryClient({
 });
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
+
   const { data, isLoading, error } = useQuery({
     queryKey: ["auth", "check"],
     queryFn: async () => {
@@ -42,7 +45,31 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
       }
     },
     retry: false,
+    refetchOnWindowFocus: false, // 윈도우 포커스 시 재검증 비활성화
+    refetchOnMount: true, // 마운트 시 재검증
+    staleTime: 60 * 1000, // 60초간 캐시 유지
   });
+
+  // 쿠키 변경 감지를 위한 이벤트 리스너
+  useEffect(() => {
+    const handleStorageChange = () => {
+      // 쿠키가 변경되었을 때 인증 상태 재검증
+      queryClient.invalidateQueries({ queryKey: ["auth", "check"] });
+    };
+
+    // storage 이벤트 리스너 (다른 탭에서 쿠키 변경 시)
+    window.addEventListener("storage", handleStorageChange);
+
+    // 주기적으로 인증 상태 확인 (60초마다, 더 긴 간격)
+    const interval = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ["auth", "check"] });
+    }, 60000);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [queryClient]);
 
   if (isLoading) return <AuthLoading>Loading...</AuthLoading>;
   if (error || !data) return <Navigate to="/login" replace />;
@@ -65,6 +92,7 @@ export default function App() {
     else root.classList.add("theme-light");
     saveTheme(colorMode);
   }, [colorMode]);
+
   useEffect(() => {
     const ch = getChannel();
     if (!ch) return;
