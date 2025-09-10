@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useCharacterForm } from "../hooks/useCharacterForm";
 
 import { Button, Input, Textarea } from "../styles/primitives";
@@ -22,6 +23,11 @@ export function CharacterForm({ onSuccess }: CharacterFormProps) {
     handleSubmit,
   } = useCharacterForm(onSuccess);
 
+  // 한글 조합 상태 관리
+  const [isComposing, setIsComposing] = useState(false);
+  const [localName, setLocalName] = useState(formData.name);
+  const [localPrompt, setLocalPrompt] = useState(formData.prompt);
+
   function handleFileInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selectedFile = e.target.files?.[0] || null;
     handleFileChange(selectedFile);
@@ -31,17 +37,52 @@ export function CharacterForm({ onSuccess }: CharacterFormProps) {
     handleFileChange(null);
   }
 
+  // 한글 입력 처리
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setLocalName(e.target.value);
+    if (!isComposing) {
+      updateFormData({ name: e.target.value });
+    }
+  }
+
+  function handlePromptChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setLocalPrompt(e.target.value);
+    if (!isComposing) {
+      updateFormData({ prompt: e.target.value });
+    }
+  }
+
+  function handleCompositionStart() {
+    setIsComposing(true);
+  }
+
+  function handleCompositionEnd(e: React.CompositionEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    setIsComposing(false);
+    const value = e.currentTarget.value;
+    if (e.currentTarget.type === 'text') {
+      setLocalName(value);
+      updateFormData({ name: value });
+    } else {
+      setLocalPrompt(value);
+      updateFormData({ prompt: value });
+    }
+  }
+
   return (
     <FormContainer onSubmit={handleSubmit}>
       <Input
-        value={formData.name}
-        onChange={(e) => updateFormData({ name: e.target.value })}
+        value={localName}
+        onChange={handleNameChange}
+        onCompositionStart={handleCompositionStart}
+        onCompositionEnd={handleCompositionEnd}
         placeholder="이름"
         required
       />
       <Textarea
-        value={formData.prompt}
-        onChange={(e) => updateFormData({ prompt: e.target.value })}
+        value={localPrompt}
+        onChange={handlePromptChange}
+        onCompositionStart={handleCompositionStart}
+        onCompositionEnd={handleCompositionEnd}
         placeholder="프롬프트"
         required
       />
