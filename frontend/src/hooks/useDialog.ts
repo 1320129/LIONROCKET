@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { DialogContext } from "./DialogContext";
+import { DialogContext } from "../types/dialog";
 
 export function useDialog() {
   const ctx = useContext(DialogContext);
