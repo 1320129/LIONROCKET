@@ -1,5 +1,6 @@
 import { CharacterCard } from "./CharacterCard";
 import { Character } from "../types/character";
+import { EmptyCharacterList } from "../styles/styled";
 
 type CharacterListProps = {
   characters: Character[];
@@ -16,9 +17,9 @@ export function CharacterList({
 }: CharacterListProps) {
   if (characters.length === 0) {
     return (
-      <div style={{ textAlign: "center", padding: "2rem", color: "#666" }}>
+      <EmptyCharacterList>
         생성된 캐릭터가 없습니다.
-      </div>
+      </EmptyCharacterList>
     );
   }
 

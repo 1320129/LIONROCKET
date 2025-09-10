@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 
 import { api } from "../lib/api";
+import { LoginCredentials } from "../types/auth";
 
 import {
   LoginContainer,
@@ -23,13 +24,7 @@ export default function LoginPage() {
   }, []);
 
   const authMutation = useMutation({
-    mutationFn: async ({
-      email,
-      password,
-    }: {
-      email: string;
-      password: string;
-    }) => {
+    mutationFn: async ({ email, password }: LoginCredentials) => {
       const path = mode === "login" ? "/auth/login" : "/auth/register";
       return api(path, {
         method: "POST",

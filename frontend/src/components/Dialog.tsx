@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Button } from "../styles/primitives";
 import { DialogTitle, DialogMessage, DialogActions, DialogBackdrop, DialogCard } from "../styles/styled";
-import { DialogAPI, DialogContext } from "../hooks/DialogContext";
+import { DialogAPI, DialogContext } from "../types/dialog";
 
 type DialogState = {
   open: boolean;

@@ -9,11 +9,20 @@ import { MessageWithStatus } from "../types/message";
 
 const LIMIT = 30;
 
+/**
+ * 메시지 관리 훅
+ * React Query의 useInfiniteQuery를 사용하여 메시지 목록을 관리합니다.
+ * 무한 스크롤, 메시지 추가/수정, 자동 스크롤 기능을 제공합니다.
+ *
+ * @param characterId 현재 캐릭터 ID
+ * @returns 메시지 목록, 로딩 상태, 핸들러 함수들
+ */
 export function useMessages(characterId: number) {
   const queryClient = useQueryClient();
   const listRef = useRef<HTMLDivElement | null>(null);
   const stickToBottomRef = useRef(true);
 
+  // 무한 스크롤 쿼리
   const {
     data,
     status,
@@ -35,6 +44,11 @@ export function useMessages(characterId: number) {
 
   const messages = data?.pages.flat() ?? [];
 
+  /**
+   * 새 메시지 추가
+   * 캐시에 새 메시지를 추가합니다.
+   * @param message 추가할 메시지
+   */
   const addMessage = (message: MessageWithStatus) => {
     queryClient.setQueryData(
       ["messages", characterId],
@@ -50,6 +64,12 @@ export function useMessages(characterId: number) {
     );
   };
 
+  /**
+   * 메시지 업데이트
+   * 특정 메시지의 상태나 내용을 업데이트합니다.
+   * @param id 업데이트할 메시지 ID
+   * @param updates 업데이트할 내용
+   */
   const updateMessage = (id: number, updates: Partial<MessageWithStatus>) => {
     queryClient.setQueryData(
       ["messages", characterId],
@@ -65,6 +85,11 @@ export function useMessages(characterId: number) {
     );
   };
 
+  /**
+   * 스크롤 이벤트 핸들러
+   * 상단 스크롤 시 이전 메시지를 로드하고 하단 근처 여부를 추적합니다.
+   * @param e 스크롤 이벤트
+   */
   const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const el = e.currentTarget;
     if (el.scrollTop <= 0 && hasNextPage && !isFetchingNextPage) {
@@ -79,6 +104,10 @@ export function useMessages(characterId: number) {
     stickToBottomRef.current = nearBottom;
   };
 
+  /**
+   * 하단으로 스크롤
+   * 사용자가 하단 근처에 있을 때만 자동 스크롤합니다.
+   */
   const scrollToBottom = () => {
     requestAnimationFrame(() => {
       const el = listRef.current;

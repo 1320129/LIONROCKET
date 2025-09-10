@@ -4,21 +4,20 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 import { useDialog } from "./useDialog";
 import { saveLastCharacter } from "../lib/persist";
+import { Character } from "../types/character";
 
-type Character = {
-  id: number;
-  owner_user_id: number | null;
-  name: string;
-  prompt: string;
-  thumbnail_path: string | null;
-  created_at: number;
-};
-
+/**
+ * 캐릭터 액션 관리 훅
+ * 캐릭터 삭제 및 채팅 이동 기능을 제공합니다.
+ *
+ * @returns 캐릭터 삭제, 채팅 이동 함수들과 로딩 상태
+ */
 export function useCharacterActions() {
   const dialog = useDialog();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
+  // 캐릭터 삭제 뮤테이션
   const deleteCharacterMutation = useMutation({
     mutationFn: async (id: number) => {
       return api(`/characters/${id}`, { method: "DELETE" });
@@ -33,6 +32,11 @@ export function useCharacterActions() {
     },
   });
 
+  /**
+   * 캐릭터 삭제
+   * 사용자 확인 후 캐릭터를 삭제합니다.
+   * @param id 삭제할 캐릭터 ID
+   */
   async function deleteCharacter(id: number) {
     const ok = await dialog.confirm(
       "이 캐릭터를 삭제하시겠습니까? 관련 대화도 함께 삭제됩니다.",
@@ -44,6 +48,11 @@ export function useCharacterActions() {
     deleteCharacterMutation.mutate(id);
   }
 
+  /**
+   * 채팅 페이지로 이동
+   * 캐릭터 정보를 캐시하고 채팅 페이지로 네비게이션합니다.
+   * @param character 이동할 캐릭터 정보
+   */
   function goToChat(character: Character) {
     saveLastCharacter(character.id);
     try {

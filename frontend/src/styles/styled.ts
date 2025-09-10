@@ -28,6 +28,9 @@ export const MessageListCard = styled.div`
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  border: 1px solid ${({ theme }) => theme.colors.border || '#e0e0e0'};
+  border-radius: 8px;
+  background-color: ${({ theme }) => theme.colors.background || '#ffffff'};
 `;
 
 export const GridWithMargin = styled.div`
@@ -58,6 +61,12 @@ export const FormContainer = styled.form`
 export const GridContainer = styled.div`
   display: grid;
   gap: 12px;
+`;
+
+export const EmptyCharacterList = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: #666;
 `;
 
 export const FlexContainer = styled.div<{
@@ -147,6 +156,10 @@ export const ChatHeader = styled.div`
 export const ChatForm = styled.form`
   display: flex;
   gap: 8px;
+  padding: 12px;
+  border: 1px solid ${({ theme }) => theme.colors.border || '#e0e0e0'};
+  border-radius: 8px;
+  background-color: ${({ theme }) => theme.colors.background || '#ffffff'};
 `;
 
 export const ChatInput = styled.input`
