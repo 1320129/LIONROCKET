@@ -1,6 +1,7 @@
 import React from "react";
 import { Button, Card, EmptyState } from "../ui/primitives";
 import { MessageItem } from "./MessageItem";
+import { LoadMoreButton, ErrorText } from "../ui/styled";
 
 type MessageWithStatus = {
   id: number;
@@ -48,11 +49,11 @@ export function MessageList({
       }}
     >
       {hasNextPage && (
-        <div style={{ marginBottom: 8 }}>
+        <LoadMoreButton>
           <Button onClick={onLoadOlder} disabled={isFetchingNextPage}>
             {isFetchingNextPage ? "불러오는 중..." : "이전 메시지 더 보기"}
           </Button>
-        </div>
+        </LoadMoreButton>
       )}
 
       {loading && messages.length === 0 && (
@@ -71,7 +72,7 @@ export function MessageList({
         />
       ))}
 
-      {error && <div style={{ color: "red" }}>{String(error)}</div>}
+      {error && <ErrorText>{String(error)}</ErrorText>}
     </Card>
   );
 }
