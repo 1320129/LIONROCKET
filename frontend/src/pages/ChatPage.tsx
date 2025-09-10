@@ -1,254 +1,115 @@
-import React from "react";
+import React, { useCallback, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { apiWithRetry } from "../lib/api";
-import { useDialog } from "../ui/Dialog";
-import { Button, Card, EmptyState, Row, Input } from "../ui/primitives";
-import {
-  readDraft,
-  saveDraft,
-  readLastCharacter,
-  getChannel,
-} from "../lib/persist";
+import { Row } from "../ui/primitives";
+import { useCharacter } from "../hooks/useCharacter";
+import { useMessages } from "../hooks/useMessages";
+import { useChat } from "../hooks/useChat";
+import { useDraft } from "../hooks/useDraft";
+import { useBroadcastChannel } from "../hooks/useBroadcastChannel";
+import { MessageList } from "../components/MessageList";
+import { ChatInput } from "../components/ChatInput";
+import { validateCharacterId, redirectToLastCharacter } from "../utils/chatUtils";
 
-type Message = {
+type MessageWithStatus = {
   id: number;
   role: "user" | "assistant";
   content: string;
   created_at: number;
-};
-type MessageWithStatus = Message & {
   status?: "pending" | "failed" | "sent";
   error?: string;
 };
 
 export default function ChatPage() {
-  const dialog = useDialog();
   const { id } = useParams();
   const characterId = Number(id);
-  const cachedName = (() => {
-    try {
-      return localStorage.getItem(`characterName:${characterId}`) || undefined;
-    } catch {
-      return undefined;
-    }
-  })();
-  const [messages, setMessages] = React.useState<MessageWithStatus[]>([]);
-  const [input, setInput] = React.useState("");
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-  const [loadingOlder, setLoadingOlder] = React.useState(false);
-  const [hasMore, setHasMore] = React.useState(true);
-  const [characterName, setCharacterName] = React.useState<string>(
-    cachedName || `캐릭터 #${characterId}`
-  );
-  const listRef = React.useRef<HTMLDivElement | null>(null);
-  const stickToBottomRef = React.useRef(true);
 
-  React.useEffect(() => {
-    (async () => {
-      if (!cachedName) {
-        try {
-          const ch = await apiWithRetry<{ id: number; name: string }>(
-            `/characters/${characterId}`
-          );
-          if (ch?.name) setCharacterName(ch.name);
-        } catch {
-          // ignore fetch error; fallback name is already set
-          void 0;
-        }
-      }
-      try {
-        const limit = 30;
-        const list = await apiWithRetry<MessageWithStatus[]>(
-          `/messages?characterId=${characterId}&limit=${limit}`
-        );
-        setMessages(list);
-        setHasMore(list.length === limit);
-        setInput(readDraft(characterId));
-        // After initial load, scroll to bottom
-        requestAnimationFrame(() => {
-          const el = listRef.current;
-          if (el) el.scrollTop = el.scrollHeight;
-        });
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        setError(msg);
-      }
-    })();
-  }, [characterId, cachedName]);
+  // Custom hooks
+  const { characterName } = useCharacter(characterId);
+  const {
+    messages,
+    loading: messagesLoading,
+    loadingOlder,
+    hasMore,
+    error,
+    listRef,
+    loadOlder,
+    addMessage,
+    updateMessage,
+    onScroll,
+    scrollToBottom,
+    setError,
+  } = useMessages(characterId);
+  const { loading: chatLoading, sendMessage, retryMessage } = useChat(characterId);
+  const { input, setInput } = useDraft(characterId);
 
-  async function loadOlder() {
-    if (loadingOlder || !hasMore || messages.length === 0) return;
-    setLoadingOlder(true);
-    try {
-      const limit = 30;
-      const oldest = messages[0]?.created_at;
-      const older = await apiWithRetry<MessageWithStatus[]>(
-        `/messages?characterId=${characterId}&limit=${limit}&before=${oldest}`
-      );
-      setMessages((prev) => [...older, ...prev]);
-      setHasMore(older.length === limit);
-      // keep scroll position roughly stable
-      requestAnimationFrame(() => {
-        const el = listRef.current;
-        if (el) el.scrollTop = 1; // nudge to avoid re-trigger at exact 0
-      });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
-    } finally {
-      setLoadingOlder(false);
-    }
-  }
+  // Broadcast channel handlers
+  const handleDraftUpdate = useCallback((value: string) => {
+    setInput(value);
+  }, [setInput]);
 
-  function onScroll(e: React.UIEvent<HTMLDivElement>) {
-    const el = e.currentTarget;
-    if (el.scrollTop <= 0) {
-      void loadOlder();
-    }
-    // track whether user is near bottom (within 24px)
-    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
-    stickToBottomRef.current = nearBottom;
-  }
+  const handleLogout = useCallback(() => {
+    location.href = "/login";
+  }, []);
 
-  React.useEffect(() => {
-    const ch = getChannel();
-    if (!ch) return;
-    const onMessage = (ev: MessageEvent<unknown>) => {
-      const data = ev.data as {
-        type?: string;
-        characterId?: number;
-        value?: unknown;
+  useBroadcastChannel(characterId, handleDraftUpdate, handleLogout);
+
+  // Event handlers
+  const handleSend = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      
+      const onSuccess = (userMsg: MessageWithStatus, assistantMsg: MessageWithStatus) => {
+        addMessage(userMsg);
+        updateMessage(userMsg.id, { status: "sent" });
+        addMessage(assistantMsg);
+        scrollToBottom();
+        setError(null);
       };
-      if (data?.type === "draft" && data.characterId === characterId) {
-        const value = (data as { value?: unknown }).value;
-        setInput(String(value || ""));
-      }
-      if (data?.type === "logout") {
-        location.href = "/login";
-      }
-    };
-    ch.addEventListener("message", onMessage);
-    return () => ch.removeEventListener("message", onMessage);
-  }, [characterId]);
 
-  async function onSend(e: React.FormEvent) {
-    e.preventDefault();
-    if (!input.trim()) return;
-    if (input.length > 200) {
-      await dialog.alert("메시지는 200자 이내로 입력해주세요.", "안내");
-      return;
-    }
-    setError(null);
-    const now = Date.now();
-    const userMsg: MessageWithStatus = {
-      id: Date.now(),
-      role: "user",
-      content: input,
-      created_at: now,
-      status: "pending",
-    } as MessageWithStatus;
-    stickToBottomRef.current = true;
-    setMessages((prev) => [...prev, userMsg]);
-    setInput("");
-    setLoading(true);
-    try {
-      const res = await apiWithRetry<{ reply: string; createdAt: number }>(
-        "/chat",
-        {
-          method: "POST",
-          body: JSON.stringify({ characterId, message: userMsg.content }),
-        },
-        2,
-        400
-      );
-      // mark user as sent
-      setMessages((prev) =>
-        prev.map((m) => (m.id === userMsg.id ? { ...m, status: "sent" } : m))
-      );
-      const assistant: MessageWithStatus = {
-        id: Date.now() + 1,
-        role: "assistant",
-        content: res.reply,
-        created_at: res.createdAt,
-        status: "sent",
-      } as MessageWithStatus;
-      setMessages((prev) => [...prev, assistant]);
-      // auto scroll to bottom if user was near bottom
-      requestAnimationFrame(() => {
-        const el = listRef.current;
-        if (el && stickToBottomRef.current) el.scrollTop = el.scrollHeight;
-      });
+      const onError = (userMsg: MessageWithStatus, errorMsg: string) => {
+        addMessage(userMsg);
+        updateMessage(userMsg.id, { status: "failed", error: errorMsg });
+        setError(errorMsg);
+      };
+
+      await sendMessage(input, onSuccess, onError);
+      setInput("");
+    },
+    [input, sendMessage, addMessage, updateMessage, scrollToBottom, setError, setInput]
+  );
+
+  const handleRetry = useCallback(
+    async (messageId: number) => {
+      const target = messages.find((m) => m.id === messageId);
+      if (!target) return;
+
       setError(null);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "전송 실패";
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === userMsg.id ? { ...m, status: "failed", error: msg } : m
-        )
-      );
-      setError(msg);
-      await dialog.alert(msg, "오류");
-    } finally {
-      setLoading(false);
-    }
-  }
+      updateMessage(messageId, { status: "pending", error: undefined });
 
-  async function onRetry(messageId: number) {
-    const target = messages.find((m) => m.id === messageId);
-    if (!target) return;
-    setError(null);
-    setMessages((prev) =>
-      prev.map((m) =>
-        m.id === messageId ? { ...m, status: "pending", error: undefined } : m
-      )
-    );
-    try {
-      const res = await apiWithRetry<{ reply: string; createdAt: number }>(
-        "/chat",
-        {
-          method: "POST",
-          body: JSON.stringify({ characterId, message: target.content }),
-        },
-        2,
-        400
-      );
-      setMessages((prev) =>
-        prev.map((m) => (m.id === messageId ? { ...m, status: "sent" } : m))
-      );
-      const assistant: MessageWithStatus = {
-        id: Date.now() + 1,
-        role: "assistant",
-        content: res.reply,
-        created_at: res.createdAt,
-        status: "sent",
-      } as MessageWithStatus;
-      setMessages((prev) => [...prev, assistant]);
-      requestAnimationFrame(() => {
-        const el = listRef.current;
-        if (el && stickToBottomRef.current) el.scrollTop = el.scrollHeight;
-      });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "전송 실패";
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === messageId ? { ...m, status: "failed", error: msg } : m
-        )
-      );
-      setError(msg);
-    }
-  }
+      const onSuccess = (assistantMsg: MessageWithStatus) => {
+        updateMessage(messageId, { status: "sent" });
+        addMessage(assistantMsg);
+        scrollToBottom();
+      };
 
-  React.useEffect(() => {
-    saveDraft(characterId, input);
-  }, [characterId, input]);
+      const onError = (msgId: number, errorMsg: string) => {
+        updateMessage(msgId, { status: "failed", error: errorMsg });
+        setError(errorMsg);
+      };
 
-  React.useEffect(() => {
-    if (!characterId || Number.isNaN(characterId)) {
-      const last = readLastCharacter();
-      if (last) location.replace(`/chat/${last}`);
+      await retryMessage(messageId, target.content, onSuccess, onError);
+    },
+    [messages, retryMessage, updateMessage, addMessage, scrollToBottom, setError]
+  );
+
+  // Character ID validation
+  useEffect(() => {
+    if (!validateCharacterId(characterId)) {
+      redirectToLastCharacter();
     }
   }, [characterId]);
+
+  const loading = messagesLoading || chatLoading;
 
   return (
     <div style={{ padding: 24, display: "grid", gap: 12 }}>
@@ -256,74 +117,25 @@ export default function ChatPage() {
         <Link to="/">← 캐릭터 목록</Link>
         <div style={{ fontWeight: 600 }}>{characterName}</div>
       </Row>
-      <Card
-        ref={listRef}
+      
+      <MessageList
+        messages={messages}
+        loading={messagesLoading}
+        loadingOlder={loadingOlder}
+        hasMore={hasMore}
+        error={error}
+        listRef={listRef}
         onScroll={onScroll}
-        style={{
-          padding: 12,
-          minHeight: 300,
-          maxHeight: 480,
-          overflowY: "auto",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        {hasMore && (
-          <div style={{ marginBottom: 8 }}>
-            <Button onClick={() => void loadOlder()} disabled={loadingOlder}>
-              {loadingOlder ? "불러오는 중..." : "이전 메시지 더 보기"}
-            </Button>
-          </div>
-        )}
-
-        {loading && messages.length === 0 && (
-          <EmptyState>대화를 불러오고 있습니다...</EmptyState>
-        )}
-
-        {!loading && messages.length === 0 && (
-          <EmptyState>대화를 시작해보세요!</EmptyState>
-        )}
-
-        {messages.map((m) => (
-          <div key={`${m.role}-${m.id}`} style={{ marginBottom: 8 }}>
-            <div style={{ fontSize: 12, color: "#888" }}>
-              {new Date(m.created_at).toLocaleTimeString()}
-            </div>
-            <div>
-              <b>{m.role === "user" ? "나" : "AI"}</b>: {m.content}
-              {m.role === "user" && m.status === "failed" && (
-                <>
-                  {" "}
-                  <span className="muted">({m.error || "실패"})</span>{" "}
-                  <Button
-                    onClick={() => onRetry(m.id)}
-                    style={{ marginLeft: 8 }}
-                  >
-                    재전송
-                  </Button>
-                </>
-              )}
-              {m.role === "user" && m.status === "pending" && (
-                <span className="muted"> (전송 중)</span>
-              )}
-            </div>
-          </div>
-        ))}
-
-        {error && <div style={{ color: "red" }}>{error}</div>}
-      </Card>
-      <form onSubmit={onSend} style={{ display: "flex", gap: 8 }}>
-        <Input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="메시지를 입력하세요 (200자 이내)"
-          maxLength={200}
-          style={{ flex: 1 }}
-        />
-        <Button type="submit" variant="primary" disabled={loading}>
-          보내기
-        </Button>
-      </form>
+        onLoadOlder={loadOlder}
+        onRetry={handleRetry}
+      />
+      
+      <ChatInput
+        input={input}
+        loading={loading}
+        onInputChange={setInput}
+        onSubmit={handleSend}
+      />
     </div>
   );
 }
