@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
@@ -69,11 +69,11 @@ export default function HomePage() {
     queryFn: () => api<Character[]>("/characters"),
   });
 
-  const [name, setName] = React.useState("");
-  const [prompt, setPrompt] = React.useState("");
-  const [file, setFile] = React.useState<File | null>(null);
-  const [fileError, setFileError] = React.useState<string | null>(null);
-  const previewUrl = React.useMemo(
+  const [name, setName] = useState("");
+  const [prompt, setPrompt] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const previewUrl = useMemo(
     () => (file ? URL.createObjectURL(file) : null),
     [file]
   );

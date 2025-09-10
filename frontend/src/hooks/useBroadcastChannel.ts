@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { getChannel } from "../lib/persist";
 
 export function useBroadcastChannel(
@@ -6,7 +6,7 @@ export function useBroadcastChannel(
   onDraftUpdate: (value: string) => void,
   onLogout: () => void
 ) {
-  React.useEffect(() => {
+  useEffect(() => {
     const ch = getChannel();
     if (!ch) return;
 

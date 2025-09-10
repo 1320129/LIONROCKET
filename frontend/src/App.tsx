@@ -1,7 +1,11 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
-import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+} from "@tanstack/react-query";
 
 import { getChannel, readTheme, saveTheme } from "./lib/persist";
 import { api } from "./lib/api";
@@ -46,7 +50,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const [colorMode, setColorMode] = React.useState<"light" | "dark">(
+  const [colorMode, setColorMode] = useState<"light" | "dark">(
     () =>
       readTheme() ||
       (window.matchMedia &&
@@ -54,14 +58,14 @@ export default function App() {
         ? "dark"
         : "light")
   );
-  React.useEffect(() => {
+  useEffect(() => {
     const root = document.documentElement;
     root.classList.remove("theme-dark", "theme-light");
     if (colorMode === "dark") root.classList.add("theme-dark");
     else root.classList.add("theme-light");
     saveTheme(colorMode);
   }, [colorMode]);
-  React.useEffect(() => {
+  useEffect(() => {
     const ch = getChannel();
     if (!ch) return;
     const onMessage = (

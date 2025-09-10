@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 
@@ -14,11 +14,11 @@ import {
 
 export default function LoginPage() {
   const nav = useNavigate();
-  const [mode, setMode] = React.useState<"login" | "register">("login");
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
+  const [mode, setMode] = useState<"login" | "register">("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  React.useEffect(() => {
+  useEffect(() => {
     api("/auth/logout", { method: "POST" }).catch(() => {});
   }, []);
 

@@ -1,13 +1,13 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { apiWithRetry } from "../lib/api";
 
 export function useCharacter(characterId: number) {
-  const [characterName, setCharacterName] = React.useState<string>(
+  const [characterName, setCharacterName] = useState<string>(
     `캐릭터 #${characterId}`
   );
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const cachedName = (() => {
       try {
         return (

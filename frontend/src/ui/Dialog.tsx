@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import styled from "styled-components";
 import { Button, Card } from "./primitives";
 import { DialogContext } from "./useDialog";
@@ -41,13 +41,13 @@ type DialogContextValue = {
 };
 
 export function DialogProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = React.useState<DialogState>({ open: false });
+  const [state, setState] = useState<DialogState>({ open: false });
 
   function close() {
     setState({ open: false });
   }
 
-  const api = React.useMemo<DialogContextValue>(
+  const api = useMemo<DialogContextValue>(
     () => ({
       alert(msg, title) {
         return new Promise<void>((resolve) => {
@@ -98,11 +98,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
           }
         >
           <DialogCard onClick={(e) => e.stopPropagation()}>
-            {state.title && (
-              <DialogTitle>
-                {state.title}
-              </DialogTitle>
-            )}
+            {state.title && <DialogTitle>{state.title}</DialogTitle>}
             <DialogMessage>{state.message}</DialogMessage>
             <DialogActions>
               {state.showCancel && (

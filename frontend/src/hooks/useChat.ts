@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { apiWithRetry } from "../lib/api";
 import { useDialog } from "../ui/useDialog";
 import { MessageWithStatus } from "../types/message";
 
 export function useChat(characterId: number) {
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = useState(false);
   const dialog = useDialog();
 
   const sendMessage = async (
