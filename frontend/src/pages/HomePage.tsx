@@ -11,7 +11,7 @@ import {
   Grid,
   SectionTitle,
 } from "../ui/primitives";
-import { useDialog } from "../ui/Dialog";
+import { useDialog } from "../ui/useDialog";
 
 type Character = {
   id: number;
@@ -47,8 +47,8 @@ export default function HomePage() {
         setMe(res);
         const list = await api<Character[]>("/characters");
         setCharacters(list);
-      } catch (e: any) {
-        setError(e.message);
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : "요청 실패");
       } finally {
         setLoading(false);
       }
@@ -108,8 +108,8 @@ export default function HomePage() {
     try {
       await api(`/characters/${id}`, { method: "DELETE" });
       setCharacters((prev) => prev.filter((c) => c.id !== id));
-    } catch (e: any) {
-      await dialog.alert(e?.message || "삭제 실패", "오류");
+    } catch (e: unknown) {
+      await dialog.alert(e instanceof Error ? e.message : "삭제 실패", "오류");
     }
   }
 

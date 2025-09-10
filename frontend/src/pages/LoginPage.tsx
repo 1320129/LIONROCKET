@@ -10,7 +10,6 @@ export default function LoginPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
 
-  // Clear any stale auth cookie on mount to avoid signature mismatch after server secret changes
   React.useEffect(() => {
     api("/auth/logout", { method: "POST" }).catch(() => {});
   }, []);
@@ -26,8 +25,8 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
       nav("/", { replace: true });
-    } catch (err: any) {
-      setError(err.message || "요청 실패");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "요청 실패");
     } finally {
       setLoading(false);
     }
