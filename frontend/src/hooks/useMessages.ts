@@ -50,10 +50,7 @@ export function useMessages(characterId: number) {
     );
   };
 
-  const updateMessage = (
-    id: number,
-    updates: Partial<MessageWithStatus>
-  ) => {
+  const updateMessage = (id: number, updates: Partial<MessageWithStatus>) => {
     queryClient.setQueryData(
       ["messages", characterId],
       (oldData: InfiniteData<MessageWithStatus[]> | undefined) => {
@@ -78,8 +75,7 @@ export function useMessages(characterId: number) {
         });
       });
     }
-    const nearBottom =
-      el.scrollHeight - el.scrollTop - el.clientHeight < 24;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
     stickToBottomRef.current = nearBottom;
   };
 
@@ -92,7 +88,7 @@ export function useMessages(characterId: number) {
 
   return {
     messages,
-    loading: status === 'pending',
+    loading: status === "pending",
     loadingOlder: isFetchingNextPage,
     hasMore: hasNextPage ?? false,
     error: error?.message || null,
