@@ -103,15 +103,16 @@ export function useMessages(characterId: number) {
 
   return {
     messages,
-    status,
-    error,
+    loading: status === 'pending',
+    loadingOlder: isFetchingNextPage,
+    hasMore: hasNextPage ?? false,
+    error: error?.message || null,
     listRef,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
+    loadOlder: fetchNextPage,
     addMessage,
     updateMessage,
     onScroll,
     scrollToBottom,
+    setError: () => {}, // react-query의 error는 자동으로 관리되므로 빈 함수
   };
 }
