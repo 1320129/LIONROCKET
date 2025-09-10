@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 
 import { useCharacter } from "../hooks/useCharacter";

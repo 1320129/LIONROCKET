@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import styled from "styled-components";
 import { Button, Card } from "../styles/primitives";
 import { DialogTitle, DialogMessage, DialogActions } from "../styles/styled";

@@ -1,3 +1,4 @@
+import { createContext } from "react";
 import React from "react";
 
 export type DialogAPI = {
@@ -10,4 +11,4 @@ export type DialogAPI = {
   ) => Promise<boolean>;
 };
 
-export const DialogContext = React.createContext<DialogAPI | null>(null);
+export const DialogContext = createContext<DialogAPI | null>(null);

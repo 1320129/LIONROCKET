@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { apiWithRetry } from "../lib/api";
 
 export function useCharacter(characterId: number) {

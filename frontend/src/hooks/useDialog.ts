@@ -1,4 +1,4 @@
-import React from "react";
+import { useContext } from "react";
 import { DialogAPI, DialogContext } from "./DialogContext";
 
 export function useDialog() {

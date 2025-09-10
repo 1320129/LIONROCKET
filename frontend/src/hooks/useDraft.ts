@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { readDraft, saveDraft } from "../lib/persist";
 
 export function useDraft(characterId: number) {

@@ -1,4 +1,3 @@
-import React from "react";
 import { Button, Card, EmptyState } from "../styles/primitives";
 import { MessageItem } from "./MessageItem";
 import { LoadMoreButton, ErrorText, MessageListCard } from "../styles/styled";

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { getChannel } from "../lib/persist";
 
 export function useBroadcastChannel(
