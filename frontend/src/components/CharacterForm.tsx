@@ -124,7 +124,11 @@ export function CharacterForm({ onSuccess }: CharacterFormProps) {
         </ImagePreview>
       )}
       {fileError && <ErrorText>{fileError}</ErrorText>}
-      <Button type="submit" variant="primary" disabled={createCharacterMutation.isPending}>
+      <Button
+        type="submit"
+        variant="primary"
+        disabled={createCharacterMutation.isPending}
+      >
         {createCharacterMutation.isPending ? "생성 중..." : "생성"}
       </Button>
     </FormContainer>
