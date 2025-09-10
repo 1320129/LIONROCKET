@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { apiWithRetry } from "../lib/api";
 
 type Message = {
@@ -14,100 +15,84 @@ type MessageWithStatus = Message & {
 };
 
 export function useMessages(characterId: number) {
-  const [messages, setMessages] = useState<MessageWithStatus[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingOlder, setLoadingOlder] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // react-query로 데이터 페칭 관리
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    error,
+    fetchNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["messages", characterId],
+    queryFn: async ({ pageParam }) => {
+      const limit = 30;
+      const before = pageParam ? `&before=${pageParam}` : "";
+      return await apiWithRetry<MessageWithStatus[]>(
+        `/messages?characterId=${characterId}&limit=${limit}${before}`
+      );
+    },
+    getNextPageParam: (lastPage) => {
+      return lastPage.length === 30 ? lastPage[0]?.created_at : undefined;
+    },
+    initialPageParam: undefined as number | undefined,
+  });
+
+  // 새 메시지 추가를 위한 useState
+  const [newMessages, setNewMessages] = useState<MessageWithStatus[]>([]);
+
+  // 스크롤 관련 refs
   const listRef = useRef<HTMLDivElement | null>(null);
   const stickToBottomRef = useRef(true);
 
-  const loadMessages = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const limit = 30;
-      const list = await apiWithRetry<MessageWithStatus[]>(
-        `/messages?characterId=${characterId}&limit=${limit}`
+  // 모든 메시지를 하나의 배열로 합치기
+  const allMessages = [...(data?.pages.flat().reverse() || []), ...newMessages];
+
+  const addMessage = useCallback((message: MessageWithStatus) => {
+    setNewMessages((prev) => [...prev, message]);
+  }, []);
+
+  const updateMessage = useCallback(
+    (id: number, updates: Partial<MessageWithStatus>) => {
+      setNewMessages((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, ...updates } : m))
       );
-      setMessages(list);
-      setHasMore(list.length === limit);
-      // After initial load, scroll to bottom
-      requestAnimationFrame(() => {
-        const el = listRef.current;
-        if (el) el.scrollTop = el.scrollHeight;
-      });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    []
+  );
 
-  const loadOlder = async () => {
-    if (loadingOlder || !hasMore || messages.length === 0) return;
-    setLoadingOlder(true);
-    try {
-      const limit = 30;
-      const oldest = messages[0]?.created_at;
-      const older = await apiWithRetry<MessageWithStatus[]>(
-        `/messages?characterId=${characterId}&limit=${limit}&before=${oldest}`
-      );
-      setMessages((prev) => [...older, ...prev]);
-      setHasMore(older.length === limit);
-      // keep scroll position roughly stable
-      requestAnimationFrame(() => {
-        const el = listRef.current;
-        if (el) el.scrollTop = 1; // nudge to avoid re-trigger at exact 0
-      });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
-    } finally {
-      setLoadingOlder(false);
-    }
-  };
+  const onScroll = useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      const el = e.currentTarget;
+      if (el.scrollTop <= 0 && hasNextPage && !isFetchingNextPage) {
+        void fetchNextPage();
+      }
+      // track whether user is near bottom (within 24px)
+      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
+      stickToBottomRef.current = nearBottom;
+    },
+    [hasNextPage, isFetchingNextPage, fetchNextPage]
+  );
 
-  const addMessage = (message: MessageWithStatus) => {
-    setMessages((prev) => [...prev, message]);
-  };
-
-  const updateMessage = (id: number, updates: Partial<MessageWithStatus>) => {
-    setMessages((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, ...updates } : m))
-    );
-  };
-
-  const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const el = e.currentTarget;
-    if (el.scrollTop <= 0) {
-      void loadOlder();
-    }
-    // track whether user is near bottom (within 24px)
-    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
-    stickToBottomRef.current = nearBottom;
-  };
-
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
       const el = listRef.current;
       if (el && stickToBottomRef.current) el.scrollTop = el.scrollHeight;
     });
-  };
+  }, []);
 
-  useEffect(() => {
-    void loadMessages();
-  }, [characterId]);
+  const setError = useCallback((_error: string | null) => {
+    // react-query의 error는 자동으로 관리되므로 빈 함수
+  }, []);
 
   return {
-    messages,
-    loading,
-    loadingOlder,
-    hasMore,
-    error,
+    messages: allMessages,
+    loading: isLoading,
+    loadingOlder: isFetchingNextPage,
+    hasMore: hasNextPage ?? false,
+    error: error?.message || null,
     listRef,
-    loadOlder,
+    loadOlder: fetchNextPage,
     addMessage,
     updateMessage,
     onScroll,

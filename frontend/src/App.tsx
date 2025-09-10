@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { theme as appTheme } from "./ui/theme";
 import { GlobalStyle } from "./ui/GlobalStyle";
 import { Container, PageHeader, Button as Btn } from "./ui/primitives";
@@ -10,6 +11,16 @@ import HomePage from "./pages/HomePage";
 import { API_BASE } from "./lib/config";
 import { getChannel, readTheme, saveTheme } from "./lib/persist";
 import ChatPage from "./pages/ChatPage";
+
+// QueryClient 인스턴스 생성
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5분
+      retry: 1,
+    },
+  },
+});
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const [authed, setAuthed] = React.useState<boolean | null>(null);
@@ -55,10 +66,11 @@ export default function App() {
     return () => ch.removeEventListener("message", onMessage as any);
   }, []);
   return (
-    <ThemeProvider theme={appTheme}>
-      <GlobalStyle />
-      <DialogProvider>
-      <BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider theme={appTheme}>
+        <GlobalStyle />
+        <DialogProvider>
+        <BrowserRouter>
         <Container>
           <PageHeader>
             <div style={{ fontWeight: 700 }}>AI Chat</div>
@@ -97,8 +109,9 @@ export default function App() {
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </BrowserRouter>
-      </DialogProvider>
-    </ThemeProvider>
+        </BrowserRouter>
+        </DialogProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
